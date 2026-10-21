@@ -23,38 +23,39 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
             out.append(rr)
         return out
 
-    # 1. BOS/CHoCH: Buang baris yang BOS & CHOCH-nya NaN
+    # 1. BOS/CHoCH
     bos_data = []
     if bos_choch is not None and not bos_choch.empty:
         valid_bos = bos_choch.dropna(subset=["BOS", "CHOCH"], how="all")
-        bos_data = _clean(valid_bos.tail(3).reset_index().to_dict("records"))
+        bos_data = _clean(valid_bos.tail(10).reset_index().to_dict("records"))
 
-    # 2. OB: Buang yang udah mitigated (MitigatedIndex == NaN artinya belum mitigated)
+    # 2. OB (Ambil 20 terakhir, tandai mana yang udah mitigated)
     ob_data = []
     if ob is not None and not ob.empty:
-        valid_ob = ob[ob["MitigatedIndex"].isna()] if "MitigatedIndex" in ob.columns else ob
-        ob_data = _clean(valid_ob.tail(3).reset_index().to_dict("records"))
+        # Kita TIDAK membuang yang mitigated, tapi kita ambil 20 terakhir
+        recent_ob = ob.tail(20) 
+        ob_data = _clean(recent_ob.reset_index().to_dict("records"))
 
-    # 3. FVG
+    # 3. FVG (Ambil 20 terakhir, tandai mana yang udah mitigated)
     fvg_data = []
     if fvg is not None and not fvg.empty:
-        valid_fvg = fvg[fvg["MitigatedIndex"].isna()] if "MitigatedIndex" in fvg.columns else fvg
-        fvg_data = _clean(valid_fvg.tail(3).reset_index().to_dict("records"))
+        recent_fvg = fvg.tail(20)
+        fvg_data = _clean(recent_fvg.reset_index().to_dict("records"))
 
     # 4. Liquidity (BSL/SSL)
     liq_data = []
     if liquidity is not None and not liquidity.empty:
         valid_liq = liquidity.dropna(subset=["Liquidity"])
-        liq_data = _clean(valid_liq.tail(5).reset_index().to_dict("records"))
+        liq_data = _clean(valid_liq.tail(10).reset_index().to_dict("records"))
 
     bsl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") in (1, "BSL")]
     ssl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") in (-1, "SSL")]
 
-    # 5. Swing Points (Cadangan buat AI)
+    # 5. Swing Points
     swings_data = []
     if swing_hl is not None and not swing_hl.empty:
         valid_swings = swing_hl.dropna(subset=["HighLow"])
-        swings_data = _clean(valid_swings.tail(6).reset_index().to_dict("records"))
+        swings_data = _clean(valid_swings.tail(10).reset_index().to_dict("records"))
 
     # SMT Divergence
     smt_high_main = d["high"].iloc[-20:].max()
@@ -73,20 +74,20 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     usd_bias = "usd_menguat" if dxy_change > 0.001 else "usd_melemah" if dxy_change < -0.001 else "netral"
 
     actual_swings = len(swing_hl[swing_hl["HighLow"].notna()]) if swing_hl is not None else 0
+    current_price = float(d["close"].iloc[-1])
 
     return {
+        "current_price": round(current_price, 2),
         "data_len": len(d),
         "swing_len": actual_swings,
         "recent_swings": swings_data,
         "bos_choch": bos_data,
-        "order_blocks_active": ob_data,
+        "order_blocks_active": ob_data, 
         "fvg_active": fvg_data,
-        "liquidity_raw": liq_data,
         "liquidity_summary": {
-            "BSL_above": bsl_levels[:2],
-            "SSL_below": ssl_levels[:2]
+            "BSL_above": bsl_levels[:3],
+            "SSL_below": ssl_levels[:3]
         },
         "smt_status": smt_status,
-        "usd_bias_dxy": usd_bias,
-        "dxy_5bar_change": round(float(dxy_change), 5) if pd.notna(dxy_change) else 0
+        "usd_bias_dxy": usd_bias
     }
