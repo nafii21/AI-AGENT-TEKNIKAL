@@ -57,9 +57,10 @@ def decide(symbol: str, ict_h1: dict, ict_m15: dict, ict_m1: dict) -> dict:
             model=GROQ_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
+                # Tambahan default=str di sini
+                {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, default=str)},
             ],
-            temperature=0.2, # Naikin dikit biar AI-nya lebih "berani" ambil inisiatif
+            temperature=0.2,
             response_format={"type": "json_object"},
         )
         return json.loads(resp.choices[0].message.content)
