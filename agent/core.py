@@ -13,9 +13,9 @@ def analyze_market(symbol: str, timeframe: str) -> dict:
         df_main = fetch_twelvedata(symbol, timeframe)
         df_dxy = fetch_twelvedata("DXY", timeframe)
 
-        # Fetch Data SMT
+        # Fetch Data SMT (XAU pakai AUD/USD, NASDAQ pakai SPY)
         if symbol == "XAUUSD":
-            df_smt = fetch_twelvedata("XAGUSD", timeframe)
+            df_smt = fetch_twelvedata("AUDUSD", timeframe)
         elif symbol == "NASDAQ":
             df_smt = fetch_twelvedata("US500", timeframe)
         else:
