@@ -3,21 +3,19 @@ import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
-# Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "NASDAQ": "QQQ",
-    "GBPUSD": "GBP/USD",   # <-- TAMBAHAN
-    "USDJPY": "USD/JPY"    # <-- TAMBAHAN
+    "GBPUSD": "GBP/USD",
+    "USDJPY": "USD/JPY"
 }
 
-# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
     "SPX": "ES=F",
-    "EUR": "EURUSD=X", # SMT untuk GBPUSD
-    "CHF": "CHF=X"     # SMT untuk USDJPY (USD/CHF)
+    "EUR": "EURUSD=X", 
+    "CHF": "CHF=X"     
 }
 
 TF_MAP_TWELVE = {"M15": "15min", "H1": "1h", "H4": "4h", "D1": "1day"}
