@@ -1,9 +1,8 @@
-import os, httpx, yfinance as yf
+df os, httpx, yfinance as yf
 import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
-# Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "NASDAQ": "QQQ",
@@ -11,7 +10,6 @@ TWELVE_SYMBOLS = {
     "USDJPY": "USD/JPY"
 }
 
-# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
@@ -41,13 +39,20 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
     df = pd.DataFrame(resp["values"])
     df = df.rename(columns={"datetime": "timestamps"})
     
-    for col in ["open", "high", "low", "close", "volume"]:
+    # Bersihin data
+    for col in ["open", "high", "low", "close"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
     
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    
+    if "volume" not in df.columns:
+        df["volume"] = 0
+    else:
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0)
+        
     df["timestamps"] = pd.to_datetime(df["timestamps"])
     df = df.sort_values("timestamps").reset_index(drop=True)
-    if "volume" not in df.columns: df["volume"] = 0
     df["amount"] = df["close"] * df["volume"]
     return df
 
@@ -72,10 +77,22 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
         
     df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close", "Volume": "volume"})
     df = df.reset_index().rename(columns={"Datetime": "timestamps", "Date": "timestamps"})
+    
+    for col in ["open", "high", "low", "close"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+            
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    
+    if "volume" not in df.columns:
+        df["volume"] = 0
+    else:
+        df["volume"] = df["volume"].fillna(0)
+        
     df["amount"] = df["close"] * df["volume"]
 
     if timeframe == "H4":
         df = df.set_index("timestamps")
         df = df.resample('4h').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'}).dropna().reset_index()
 
-    return df
+    retureturn
