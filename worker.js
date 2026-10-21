@@ -64,7 +64,12 @@ async function triggerGitHub(token, user, repo, symbol, tf) {
 }
 
 function getAssetsKeyboard() {
-  return { inline_keyboard: [[{ text: "XAUUSD", callback_data: "asset|XAUUSD" }, { text: "NASDAQ", callback_data: "asset|NASDAQ" }]] };
+  return { 
+    inline_keyboard: [
+      [{ text: "XAUUSD", callback_data: "asset|XAUUSD" }, { text: "NASDAQ", callback_data: "asset|NASDAQ" }],
+      [{ text: "GBPUSD", callback_data: "asset|GBPUSD" }, { text: "USDJPY", callback_data: "asset|USDJPY" }]
+    ] 
+  };
 }
 
 function getTimeframeKeyboard(symbol) {
@@ -74,24 +79,4 @@ function getTimeframeKeyboard(symbol) {
       [{ text: "H4", callback_data: `tf|${symbol}|H4` }, { text: "D1", callback_data: `tf|${symbol}|D1` }]
     ]
   };
-}
-
-// Tambahan di dalam fetch handler, saat callback_query
-if (data[0] === "journal") {
-    await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "📖 Membuka Journal...");
-    await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "journal");
-}
-// ...
-
-// Update triggerGitHub untuk mendukung command
-async function triggerGitHub(token, user, repo, symbol, tf, cmd = null, args = null) {
-  const inputs = {};
-  if (cmd) inputs.cmd = cmd;
-  if (args) inputs.args = JSON.stringify(args);
-  if (symbol) inputs.symbol = symbol;
-  if (tf) inputs.tf = tf;
-
-  await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
-    // ...
-  });
 }
