@@ -1,9 +1,19 @@
 import pandas as pd
-from kronos_finance import load_kronos
+import torch
+import sys
+
+# Tambahin path repo Kronos yang udah di-clone
+sys.path.append("/tmp/Kronos")
+from model import Kronos, KronosTokenizer, KronosPredictor
+
+# Load model sekali aja (biar nggak lemot)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
+model = Kronos.from_pretrained("NeoQuasar/Kronos-small").to(device)
+predictor = KronosPredictor(model, tokenizer, device=device)
 
 def kronos_forecast(df: pd.DataFrame, horizon: int = 12) -> dict:
     try:
-        wrapper = load_kronos(model_id="small")
         hist = df.tail(400).copy()
         x_ts = pd.to_datetime(hist["timestamps"])
         last_ts = x_ts.iloc[-1]
@@ -11,7 +21,8 @@ def kronos_forecast(df: pd.DataFrame, horizon: int = 12) -> dict:
         freq = pd.infer_freq(x_ts) or "1h"
         y_ts = pd.date_range(last_ts, periods=horizon + 1, freq=freq)[1:]
 
-        pred = wrapper.predict(
+        # Pake predictor resmi
+        pred = predictor.predict(
             df=hist[["open", "high", "low", "close", "volume", "amount"]],
             x_timestamp=x_ts,
             y_timestamp=y_ts,
