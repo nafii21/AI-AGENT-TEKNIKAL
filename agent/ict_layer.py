@@ -1,5 +1,6 @@
 import pandas as pd
 from smartmoneyconcepts import smc
+import numpy as np
 
 def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: pd.DataFrame) -> dict:
     if df_main.empty: return {}
@@ -19,40 +20,48 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
         for r in rows:
             rr = {}
             for k, v in r.items():
-                if isinstance(v, pd.Timestamp): rr[k] = v.isoformat()
-                elif pd.isna(v): rr[k] = None
-                else: rr[k] = v
+                if isinstance(v, pd.Timestamp): 
+                    rr[k] = v.isoformat()
+                elif pd.isna(v): 
+                    rr[k] = None
+                elif isinstance(v, (np.integer, np.floating)):
+                    rr[k] = float(v)
+                elif isinstance(v, (int, float, str, bool)) or v is None: 
+                    rr[k] = v
+                else:
+                    rr[k] = str(v)
             out.append(rr)
         return out
 
     bos_data = []
     if bos_choch is not None and not bos_choch.empty:
         valid_bos = bos_choch.dropna(subset=["BOS", "CHOCH"], how="all")
-        
-        # Deteksi Displacement: Cek ukuran body candle BOS
         valid_bos_list = valid_bos.tail(5).reset_index().to_dict("records")
         for b in valid_bos_list:
-            idx = b["index"]
-            if idx in d.index:
+            # Ubah Timestamp ke index kalau perlu
+            idx_val = b.get("timestamps") or b.get("index")
+            idx = pd.to_datetime(idx_val) if idx_val else None
+            
+            if idx and idx in d.index:
                 candle = d.loc[idx]
                 body_size = abs(candle["close"] - candle["open"])
-                # Ambil ATR proxy 14 candle
                 atr = (d["high"] - d["low"]).rolling(14).mean().loc[idx]
-                if pd.notna(atr) and body_size > (1.2 * atr):
-                    b["is_displacement"] = True
-                else:
-                    b["is_displacement"] = False
+                b["is_displacement"] = bool(pd.notna(atr) and body_size > (1.2 * atr))
+            else:
+                b["is_displacement"] = False
         bos_data = _clean(valid_bos_list)
 
-    ob_data = []
+    ob_active, ob_mitigated = [], []
     if ob is not None and not ob.empty:
-        valid_ob = ob[ob["MitigatedIndex"].isna()] if "MitigatedIndex" in ob.columns else ob
-        ob_data = _clean(valid_ob.tail(10).reset_index().to_dict("records"))
+        if "MitigatedIndex" in ob.columns:
+            ob_active = _clean(ob[ob["MitigatedIndex"].isna()].tail(10).reset_index().to_dict("records"))
+            ob_mitigated = _clean(ob[ob["MitigatedIndex"].notna()].tail(10).reset_index().to_dict("records"))
 
-    fvg_data = []
+    fvg_active, fvg_mitigated = [], []
     if fvg is not None and not fvg.empty:
-        valid_fvg = fvg[fvg["MitigatedIndex"].isna()] if "MitigatedIndex" in fvg.columns else fvg
-        fvg_data = _clean(valid_fvg.tail(10).reset_index().to_dict("records"))
+        if "MitigatedIndex" in fvg.columns:
+            fvg_active = _clean(fvg[fvg["MitigatedIndex"].isna()].tail(10).reset_index().to_dict("records"))
+            fvg_mitigated = _clean(fvg[fvg["MitigatedIndex"].notna()].tail(10).reset_index().to_dict("records"))
 
     liq_data = []
     if liquidity is not None and not liquidity.empty:
@@ -67,7 +76,6 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
         valid_swings = swing_hl.dropna(subset=["HighLow"])
         swings_data = _clean(valid_swings.tail(10).reset_index().to_dict("records"))
 
-    # SMT & DXY (Sama)
     smt_high_main = d["high"].iloc[-20:].max()
     smt_high_comp = df_smt["high"].iloc[-20:].max()
     smt_low_main = d["low"].iloc[-20:].min()
@@ -88,8 +96,10 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
         "current_price": round(current_price, 2),
         "recent_swings": swings_data,
         "bos_choch": bos_data,
-        "order_blocks_active": ob_data,
-        "fvg_active": fvg_data,
+        "order_blocks_active": ob_active,
+        "order_blocks_mitigated": ob_mitigated,
+        "fvg_active": fvg_active,
+        "fvg_mitigated": fvg_mitigated,
         "liquidity_summary": {
             "BSL_above": bsl_levels[:3],
             "SSL_below": ssl_levels[:3]
