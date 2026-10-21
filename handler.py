@@ -51,23 +51,22 @@ def main():
             return
 
         action = decision.get("action", "WAIT")
-        emoji_action = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
+        emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
-        # Format Tampilan Eksekutif
         if action != "WAIT":
             text = (
                 f"⚡ <b>[HERMES AGENT // ACTIVE DESK SETUP: {args.symbol}]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"📌 <i>Setup Trade Baru Terdeteksi!</i>\n\n"
                 f"📊 Instrumen: {args.symbol} [{args.tf}]\n"
-                f"🎯 Rekomendasi: <b>{emoji_action} {action}</b>\n"
+                f"🎯 Rekomendasi: <b>{emoji} {action}</b>\n"
                 f"🏆 Grade: <b>{decision.get('grade', '-')}</b> | Keyakinan: <b>{decision.get('confidence', 0)}/10</b>\n"
                 f"📉 Bias: <b>{decision.get('bias', '-')}</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"📍 Zona Entry: <b>{decision.get('entry_zone_min', '-')} - {decision.get('entry_zone_max', '-')}</b>\n"
+                f"🎯 Zona Entry: <b>{decision.get('entry_zone_min', '-')} - {decision.get('entry_zone_max', '-')}</b>\n"
                 f"🛑 SL: <code>{decision.get('sl', '-')}</code>\n"
-                f"🎯 TP1: <code>{decision.get('tp1', '-')}</code> (RR {decision.get('rr_tp1', '-')})\n"
-                f"🎯 TP2: <code>{decision.get('tp2', '-')}</code> (RR {decision.get('rr_tp2', '-')})\n"
+                f"💎 TP1: <code>{decision.get('tp1', '-')}</code> (RR {decision.get('rr_tp1', '-')})\n"
+                f"💎 TP2: <code>{decision.get('tp2', '-')}</code> (RR {decision.get('rr_tp2', '-')})\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"🧠 <b>Konteks H1:</b>\n<i>{decision.get('reason_h1', '-')}</i>\n\n"
                 f"📊 <b>Konteks {args.tf}:</b>\n<i>{decision.get('reason_m15', '-')}</i>\n\n"
@@ -81,7 +80,6 @@ def main():
                 f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
             )
         else:
-            # Format kalau WAIT
             text = (
                 f"⚪ <b>[HERMES AGENT // NO SETUP]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -94,7 +92,6 @@ def main():
                 f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
             )
 
-        # Kirim Chart & Pesan
         df_ohlcv = pd.DataFrame(decision.get("df_ohlcv", []))
         if not df_ohlcv.empty and action != "WAIT":
             chart_file = generate_chart(df_ohlcv, decision, args.symbol, args.tf)
