@@ -3,12 +3,9 @@ from smartmoneyconcepts import smc
 
 def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: pd.DataFrame) -> dict:
     d = df_main.set_index("timestamps")[["open", "high", "low", "close", "volume"]].copy()
-    
-    # Paksa index jadi DatetimeIndex dan urut
     d.index = pd.to_datetime(d.index)
     d = d.sort_index()
     
-    # Pake swing_length 10 biar lebih stabil
     swing_hl = smc.swing_highs_lows(d, swing_length=10)
     bos_choch = smc.bos_choch(d, swing_hl)
     ob = smc.ob(d, swing_hl)
@@ -20,22 +17,44 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
         for r in rows:
             rr = {}
             for k, v in r.items():
-                if isinstance(v, pd.Timestamp): 
-                    rr[k] = v.isoformat()
-                elif pd.isna(v): 
-                    rr[k] = None
-                else: 
-                    rr[k] = v
+                if isinstance(v, pd.Timestamp): rr[k] = v.isoformat()
+                elif pd.isna(v): rr[k] = None
+                else: rr[k] = v
             out.append(rr)
         return out
 
-    # Benerin fungsi _active biar nggak ngebuang data kalau kolom MitigatedIndex ga ada
-    def _active(feat, n=3):
-        if feat is None or feat.empty: return []
-        active = feat
-        if "MitigatedIndex" in feat.columns:
-            active = feat[feat["MitigatedIndex"].isna()]
-        return _clean(active.tail(n).reset_index().to_dict("records"))
+    # 1. BOS/CHoCH: Buang baris yang BOS & CHOCH-nya NaN
+    bos_data = []
+    if bos_choch is not None and not bos_choch.empty:
+        valid_bos = bos_choch.dropna(subset=["BOS", "CHOCH"], how="all")
+        bos_data = _clean(valid_bos.tail(3).reset_index().to_dict("records"))
+
+    # 2. OB: Buang yang udah mitigated (MitigatedIndex == NaN artinya belum mitigated)
+    ob_data = []
+    if ob is not None and not ob.empty:
+        valid_ob = ob[ob["MitigatedIndex"].isna()] if "MitigatedIndex" in ob.columns else ob
+        ob_data = _clean(valid_ob.tail(3).reset_index().to_dict("records"))
+
+    # 3. FVG
+    fvg_data = []
+    if fvg is not None and not fvg.empty:
+        valid_fvg = fvg[fvg["MitigatedIndex"].isna()] if "MitigatedIndex" in fvg.columns else fvg
+        fvg_data = _clean(valid_fvg.tail(3).reset_index().to_dict("records"))
+
+    # 4. Liquidity (BSL/SSL)
+    liq_data = []
+    if liquidity is not None and not liquidity.empty:
+        valid_liq = liquidity.dropna(subset=["Liquidity"])
+        liq_data = _clean(valid_liq.tail(5).reset_index().to_dict("records"))
+
+    bsl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") in (1, "BSL")]
+    ssl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") in (-1, "SSL")]
+
+    # 5. Swing Points (Cadangan buat AI)
+    swings_data = []
+    if swing_hl is not None and not swing_hl.empty:
+        valid_swings = swing_hl.dropna(subset=["HighLow"])
+        swings_data = _clean(valid_swings.tail(6).reset_index().to_dict("records"))
 
     # SMT Divergence
     smt_high_main = d["high"].iloc[-20:].max()
@@ -53,27 +72,15 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     dxy_change = df_dxy["close"].pct_change(5).iloc[-1]
     usd_bias = "usd_menguat" if dxy_change > 0.001 else "usd_melemah" if dxy_change < -0.001 else "netral"
 
-    # Ekstrak Likuiditas (BSL / SSL)
-    liq_data = _clean(liquidity.tail(5).reset_index().to_dict("records") if liquidity is not None and not liquidity.empty else [])
-    
-    bsl_levels = []
-    ssl_levels = []
-    for x in liq_data:
-        liq_val = x.get("Liquidity")
-        if liq_val == 1 or liq_val == "BSL":
-            bsl_levels.append(x.get("Level"))
-        elif liq_val == -1 or liq_val == "SSL":
-            ssl_levels.append(x.get("Level"))
-
-    # Hitung actual swings (yang beneran ada High/Low-nya)
     actual_swings = len(swing_hl[swing_hl["HighLow"].notna()]) if swing_hl is not None else 0
 
     return {
         "data_len": len(d),
         "swing_len": actual_swings,
-        "bos_choch": _clean(bos_choch.tail(3).reset_index().to_dict("records") if bos_choch is not None and not bos_choch.empty else []),
-        "order_blocks_active": _active(ob),
-        "fvg_active": _active(fvg),
+        "recent_swings": swings_data,
+        "bos_choch": bos_data,
+        "order_blocks_active": ob_data,
+        "fvg_active": fvg_data,
         "liquidity_raw": liq_data,
         "liquidity_summary": {
             "BSL_above": bsl_levels[:2],
