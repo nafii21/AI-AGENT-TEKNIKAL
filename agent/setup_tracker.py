@@ -5,33 +5,41 @@ SETUP_FILE = "active_setups.json"
 
 def load_setups() -> dict:
     if not os.path.exists(SETUP_FILE): return {}
-    with open(SETUP_FILE, "r") as f: return json.load(f)
+    try:
+        with open(SETUP_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        # Kalau file kosong atau formatnya rusak, balikin dict kosong
+        return {}
 
 def save_setups(data: dict):
-    with open(SETUP_FILE, "w") as f: json.dump(data, f, indent=2)
+    try:
+        with open(SETUP_FILE, "w") as f: 
+            json.dump(data, f, indent=2)
+    except Exception:
+        pass
 
 def validate_and_update(symbol: str, tf: str, new_decision: dict, current_price: float) -> str:
     setups = load_setups()
     key = f"{symbol}_{tf}"
     status_msg = ""
-    
-    # Pakai UTC karena server GitHub Actions pakai UTC
     now = datetime.utcnow()
 
     if key in setups:
         old = setups[key]
         action = old.get("action")
         
-        # 1. Cek Expiry
         expiry_str = old.get("expiry_time")
         if expiry_str:
-            expiry = datetime.fromisoformat(expiry_str)
-            if now > expiry:
-                del setups[key]
-                save_setups(setups)
-                return f"⚠️ Setup {action} sebelumnya EXPIRED (Waktu habis). Mencari setup baru..."
+            try:
+                expiry = datetime.fromisoformat(expiry_str)
+                if now > expiry:
+                    del setups[key]
+                    save_setups(setups)
+                    return f"⚠️ Setup {action} sebelumnya EXPIRED (Waktu habis). Mencari setup baru..."
+            except:
+                pass
 
-        # 2. Cek Harga vs Zona
         zone_min = old.get("entry_zone_min", 0)
         zone_max = old.get("entry_zone_max", 0)
         sl = old.get("sl", 0)
@@ -50,7 +58,6 @@ def validate_and_update(symbol: str, tf: str, new_decision: dict, current_price:
         else:
             status_msg = f"⏳ Setup {action} {symbol} [{tf}] PENDING (Menunggu harga masuk zona)."
 
-    # Simpan setup baru jika action bukan WAIT
     if new_decision.get("action") in ("BUY_LIMIT", "SELL_LIMIT"):
         validity = new_decision.get("validity_mins", 45)
         expiry_time = now + timedelta(minutes=validity)
