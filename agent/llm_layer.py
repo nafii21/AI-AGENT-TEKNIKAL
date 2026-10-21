@@ -44,6 +44,20 @@ OUTPUT HARUS JSON VALID (tanpa markdown):
 }
 """
 
+def extract_json(text):
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Kalau gagal, coba cari dari kurung kurawal pertama sampai terakhir
+        start = text.find('{')
+        end = text.rfind('}')
+        if start != -1 and end != -1:
+            try:
+                return json.loads(text[start:end+1])
+            except:
+                pass
+    return {}
+
 def decide(symbol: str, ict_h1: dict, ict_m15: dict, ict_m1: dict) -> dict:
     user_payload = {
         "symbol": symbol,
@@ -57,12 +71,18 @@ def decide(symbol: str, ict_h1: dict, ict_m15: dict, ict_m1: dict) -> dict:
             model=GROQ_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                # Tambahan default=str di sini
                 {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False, default=str)},
             ],
             temperature=0.2,
             response_format={"type": "json_object"},
         )
-        return json.loads(resp.choices[0].message.content)
+        raw_content = resp.choices[0].message.content
+        result = extract_json(raw_content)
+        
+        # Pastiin key minimum ada
+        if "action" not in result:
+            result["action"] = "WAIT"
+            result["reason"] = f"Format JSON AI rusak: {raw_content[:50]}..."
+        return result
     except Exception as e:
         return {"action": "WAIT", "reason": f"LLM Error: {str(e)}", "confidence": 0}
