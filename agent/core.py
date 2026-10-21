@@ -1,26 +1,34 @@
-from agent.data import fetch_ohlcv_by_tf
+from agent.data import fetch_twelvedata
 from agent.kronos_layer import kronos_forecast
 from agent.stats_layer import compute_stats
-from agent.smc_layer import compute_smc
+from agent.ict_layer import analyze_ict_structure
 from agent.session_layer import compute_asian_session
 from agent.llm_layer import decide
 from agent.sanity_check import sanity_check
+from agent.setup_tracker import validate_and_update
 
 def analyze_market(symbol: str, timeframe: str) -> dict:
     try:
-        data = fetch_ohlcv_by_tf(symbol, timeframe)
-        df = data["df"]
+        # 1. Fetch Data (Main, SMT, DXY)
+        df_main = fetch_twelvedata(symbol, timeframe)
+        df_smt = fetch_twelvedata("XAGUSD", timeframe) if symbol == "XAUUSD" else fetch_twelvedata("NASDAQ", timeframe) # Fallback SMT untuk NASDAQ (bisa pakai US500)
+        df_dxy = fetch_twelvedata("DXY", timeframe)
+
+        current_price = float(df_main["close"].iloc[-1])
+
+        # 2. Jalankan Layer
+        session = compute_asian_session(df_main)
+        kronos = kronos_forecast(df_main, horizon=12)
+        stats  = compute_stats(df_main)
+        ict_data = analyze_ict_structure(df_main, df_smt, df_dxy)
         
-        session = compute_asian_session(df)
-        if "error" in session:
-            return {"error": f"Session Error: {session['error']}"}
-            
-        kronos = kronos_forecast(df, horizon=12)
-        stats  = compute_stats(df)
-        smc_data = compute_smc(df)
+        # 3. LLM Decision
+        decision = decide(symbol, kronos, stats, ict_data, session)
         
-        decision = decide(symbol, kronos, stats, smc_data, session)
+        # 4. Validasi Setup Lama & Simpan Baru
+        tracker_msg = validate_and_update(symbol, timeframe, decision, current_price)
         
+        # 5. Sanity Check
         ok, reason = sanity_check(decision)
         if not ok and decision.get("action") != "WAIT":
             decision["action"] = "WAIT"
@@ -28,6 +36,7 @@ def analyze_market(symbol: str, timeframe: str) -> dict:
 
         decision["timeframe"] = timeframe
         decision["symbol"] = symbol
+        decision["tracker_msg"] = tracker_msg
         return decision
     except Exception as e:
         return {"error": str(e)}
