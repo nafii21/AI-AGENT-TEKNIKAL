@@ -8,8 +8,8 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     d.index = pd.to_datetime(d.index)
     d = d.sort_index()
     
-    # Pake swing_length 5 biar lebih reaktif di Time Frame kecil
-    swing_hl = smc.swing_highs_lows(d, swing_length=5)
+    # Pake swing_length 10 biar lebih stabil
+    swing_hl = smc.swing_highs_lows(d, swing_length=10)
     bos_choch = smc.bos_choch(d, swing_hl)
     ob = smc.ob(d, swing_hl)
     fvg = smc.fvg(d)
@@ -29,10 +29,12 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
             out.append(rr)
         return out
 
-    def _active(feat, col="MitigatedIndex", n=3):
+    # Benerin fungsi _active biar nggak ngebuang data kalau kolom MitigatedIndex ga ada
+    def _active(feat, n=3):
         if feat is None or feat.empty: return []
-        if col not in feat.columns: return []
-        active = feat[feat[col].isna()]
+        active = feat
+        if "MitigatedIndex" in feat.columns:
+            active = feat[feat["MitigatedIndex"].isna()]
         return _clean(active.tail(n).reset_index().to_dict("records"))
 
     # SMT Divergence
@@ -63,9 +65,12 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
         elif liq_val == -1 or liq_val == "SSL":
             ssl_levels.append(x.get("Level"))
 
+    # Hitung actual swings (yang beneran ada High/Low-nya)
+    actual_swings = len(swing_hl[swing_hl["HighLow"].notna()]) if swing_hl is not None else 0
+
     return {
         "data_len": len(d),
-        "swing_len": len(swing_hl) if swing_hl is not None else 0,
+        "swing_len": actual_swings,
         "bos_choch": _clean(bos_choch.tail(3).reset_index().to_dict("records") if bos_choch is not None and not bos_choch.empty else []),
         "order_blocks_active": _active(ob),
         "fvg_active": _active(fvg),
