@@ -6,14 +6,18 @@ TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 # Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
-    "NASDAQ": "QQQ" 
+    "NASDAQ": "QQQ",
+    "GBPUSD": "GBP/USD",   # <-- TAMBAHAN
+    "USDJPY": "USD/JPY"    # <-- TAMBAHAN
 }
 
 # Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
-    "DXY": "DX-Y.NYB", # US Dollar Index asli
-    "XAG": "SI=F",     # Silver Futures
-    "SPX": "ES=F"      # S&P 500 Futures
+    "DXY": "DX-Y.NYB", 
+    "XAG": "SI=F",     
+    "SPX": "ES=F",
+    "EUR": "EURUSD=X", # SMT untuk GBPUSD
+    "CHF": "CHF=X"     # SMT untuk USDJPY (USD/CHF)
 }
 
 TF_MAP_TWELVE = {"M15": "15min", "H1": "1h", "H4": "4h", "D1": "1day"}
@@ -62,7 +66,6 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
     df = df.reset_index().rename(columns={"Datetime": "timestamps", "Date": "timestamps"})
     df["amount"] = df["close"] * df["volume"]
 
-    # Resample ke 4H jika timeframenya H4 (karena yfinance ga ada 4h)
     if timeframe == "H4":
         df = df.set_index("timestamps")
         df = df.resample('4h').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'}).dropna().reset_index()
