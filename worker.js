@@ -75,3 +75,23 @@ function getTimeframeKeyboard(symbol) {
     ]
   };
 }
+
+// Tambahan di dalam fetch handler, saat callback_query
+if (data[0] === "journal") {
+    await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "📖 Membuka Journal...");
+    await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "journal");
+}
+// ...
+
+// Update triggerGitHub untuk mendukung command
+async function triggerGitHub(token, user, repo, symbol, tf, cmd = null, args = null) {
+  const inputs = {};
+  if (cmd) inputs.cmd = cmd;
+  if (args) inputs.args = JSON.stringify(args);
+  if (symbol) inputs.symbol = symbol;
+  if (tf) inputs.tf = tf;
+
+  await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
+    // ...
+  });
+}
