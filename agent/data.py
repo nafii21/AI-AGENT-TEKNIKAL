@@ -7,7 +7,7 @@ TF_MAP = {"M15": "15min", "H1": "1h", "H4": "4h", "D1": "1day"}
 SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "NASDAQ": "QQQ",       # Proxy Nasdaq 100
-    "XAGUSD": "XAG/USD",   # Silver untuk SMT
+    "AUDUSD": "AUD/USD",   # Proxy SMT untuk XAUUSD (pengganti XAGUSD)
     "US500": "SPY",        # Proxy S&P 500 untuk SMT NASDAQ
     "DXY": "EUR/USD"       # Proxy DXY (Inverse)
 }
