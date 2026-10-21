@@ -52,7 +52,6 @@ def main():
         emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
         if action != "WAIT":
-            # --- TAMPILAN JIKA ADA SETUP ---
             text = (
                 f"⚡ <b>[HERMES AGENT // ACTIVE DESK SETUP: {args.symbol}]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -80,7 +79,6 @@ def main():
                 f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
             )
         else:
-            # --- TAMPILAN JIKA WAIT (LAPORAN FORENSIK) ---
             text = (
                 f"⚪ <b>[HERMES AGENT // NO SETUP REPORT: {args.symbol}]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -97,13 +95,14 @@ def main():
                 f"📊 <b>Audit M15 (Setup):</b>\n"
                 f"<i>{decision.get('reason_m15', 'Data M15 kosong.')}</i>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
+                f"<i>Garis Biru = BSL | Garis Oranye = SSL</i>\n"
                 f"{decision.get('tracker_msg', '')}\n"
                 f"<i>⚠️ Bot sedang mengawasi market. Tunggu setup Grade A berikutnya.</i>"
             )
 
-        # Generate Chart (Kalau ada setup, gambar. Kalau WAIT, cuma teks)
+        # --- UPDATE: Kirim Gambar untuk SEMUA status (ENTRY atau WAIT) ---
         df_ohlcv = pd.DataFrame(decision.get("df_ohlcv", []))
-        if not df_ohlcv.empty and action != "WAIT":
+        if not df_ohlcv.empty:
             chart_file = generate_chart(df_ohlcv, decision, args.symbol, "M15")
             if chart_file and os.path.exists(chart_file):
                 send_tg_photo(chart_file, text)
