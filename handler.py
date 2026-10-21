@@ -29,12 +29,6 @@ def main():
             send_tg(txt)
         return
 
-    if args.cmd == "addjournal":
-        data = json.loads(args.args)
-        add_journal(data["symbol"], data["action"], data["entry"], data["sl"], data["tp"], data["result"], data["notes"])
-        send_tg("✅ Journal berhasil disimpan!")
-        return
-
     if not args.symbol or not args.tf:
         send_tg("❌ Symbol atau Timeframe tidak valid.")
         return
@@ -50,7 +44,7 @@ def main():
         emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
         text = (
-            f"{emoji} <b>[HERMES SNIPER // ICT + SMT]</b>\n"
+            f"{emoji} <b>[HERMES SNIPER // ICT + LIQUIDITY]</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"📊 Instrumen: <b>{args.symbol}</b> [{args.tf}]\n"
             f"⚡ Setup: <b>{action}</b>\n"
@@ -59,6 +53,7 @@ def main():
             f"🎯 TP1: <code>{decision.get('tp1', '-')}</code> | TP2: <code>{decision.get('tp2', '-')}</code>\n"
             f"📊 RR: <b>{decision.get('rr', '-')}</b> | Conf: <b>{decision.get('confidence', 0)*100:.0f}%</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
+            f"📉 <b>Kondisi Market:</b>\n{decision.get('market_condition', '-')}\n\n"
             f"🧠 <b>Setup:</b> {decision.get('setup', '-')}\n"
             f"💡 <b>Reason:</b> {decision.get('reason', '-')}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
