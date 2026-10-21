@@ -21,7 +21,7 @@ YF_SYMBOLS = {
 }
 
 TF_MAP_TWELVE = {
-    "M5": "5min",   # <-- M5 DITAMBAHIN
+    "M5": "5min",
     "M15": "15min", 
     "H1": "1h", 
     "H4": "4h", 
@@ -55,7 +55,7 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
     ticker = YF_SYMBOLS.get(symbol_key, symbol_key)
     
     if timeframe == "M5":
-        interval, period = "5m", "5d"   # <-- M5 YFINANCE DITAMBAHIN
+        interval, period = "5m", "5d"
     elif timeframe == "M15":
         interval, period = "15m", "5d"
     elif timeframe in ["H1", "H4"]:
@@ -78,4 +78,4 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
         df = df.set_index("timestamps")
         df = df.resample('4h').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'}).dropna().reset_index()
 
-    retureturn
+    return df
