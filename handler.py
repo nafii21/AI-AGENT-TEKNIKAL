@@ -52,6 +52,7 @@ def main():
         emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
         if action != "WAIT":
+            # --- TAMPILAN JIKA ADA SETUP ---
             text = (
                 f"⚡ <b>[HERMES AGENT // ACTIVE DESK SETUP: {args.symbol}]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -79,21 +80,30 @@ def main():
                 f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
             )
         else:
+            # --- TAMPILAN JIKA WAIT (LAPORAN FORENSIK) ---
             text = (
-                f"⚪ <b>[HERMES AGENT // NO SETUP]</b>\n"
+                f"⚪ <b>[HERMES AGENT // NO SETUP REPORT: {args.symbol}]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"📊 Instrumen: <b>{args.symbol}</b> [MTF]\n"
                 f"⚡ Status: <b>WAIT / NO TRADE</b>\n"
                 f"🏆 Grade: {decision.get('grade', '-')} | Keyakinan: {decision.get('confidence', 0)}/10\n"
+                f"📉 Bias H1: <b>{decision.get('bias', '-')}</b>\n"
+                f"💰 Harga Saat Ini: <b>{decision.get('current_price', '-')}</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"📉 <b>Kondisi Market:</b>\n{decision.get('reason', '-')}\n\n"
+                f"🔍 <b>Kenapa Tidak Entry?</b>\n"
+                f"{decision.get('reason', 'Tidak ada alasan spesifik.')}\n\n"
+                f"🧠 <b>Audit H1 (Makro):</b>\n"
+                f"<i>{decision.get('reason_h1', 'Data H1 kosong.')}</i>\n\n"
+                f"📊 <b>Audit M15 (Setup):</b>\n"
+                f"<i>{decision.get('reason_m15', 'Data M15 kosong.')}</i>\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
                 f"{decision.get('tracker_msg', '')}\n"
-                f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
+                f"<i>⚠️ Bot sedang mengawasi market. Tunggu setup Grade A berikutnya.</i>"
             )
 
+        # Generate Chart (Kalau ada setup, gambar. Kalau WAIT, cuma teks)
         df_ohlcv = pd.DataFrame(decision.get("df_ohlcv", []))
         if not df_ohlcv.empty and action != "WAIT":
-            # Generate chart menggunakan data M15
             chart_file = generate_chart(df_ohlcv, decision, args.symbol, "M15")
             if chart_file and os.path.exists(chart_file):
                 send_tg_photo(chart_file, text)
