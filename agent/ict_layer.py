@@ -38,15 +38,25 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     elif smt_low_main < d["low"].iloc[-40:-20].min() and smt_low_comp > df_smt["low"].iloc[-40:-20].min():
         smt_status = "bullish_divergence"
 
-    # DXY Asli (Kalau DXY naik, USD menguat)
+    # DXY Bias
     dxy_change = df_dxy["close"].pct_change(5).iloc[-1]
     usd_bias = "usd_menguat" if dxy_change > 0.001 else "usd_melemah" if dxy_change < -0.001 else "netral"
+
+    # Ekstrak Likuiditas (BSL / SSL)
+    liq_data = _clean(liquidity.tail(5).reset_index().to_dict("records") if liquidity is not None and not liquidity.empty else [])
+    
+    bsl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") == 1]
+    ssl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") == -1]
 
     return {
         "bos_choch": _clean(bos_choch.tail(3).reset_index().to_dict("records") if bos_choch is not None and not bos_choch.empty else []),
         "order_blocks_active": _active(ob),
         "fvg_active": _active(fvg),
-        "liquidity": _clean(liquidity.tail(3).reset_index().to_dict("records") if liquidity is not None and not liquidity.empty else []),
+        "liquidity_raw": liq_data,
+        "liquidity_summary": {
+            "BSL_above": bsl_levels[:2],
+            "SSL_below": ssl_levels[:2]
+        },
         "smt_status": smt_status,
         "usd_bias_dxy": usd_bias,
         "dxy_5bar_change": round(float(dxy_change), 5) if pd.notna(dxy_change) else 0
