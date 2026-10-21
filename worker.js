@@ -3,14 +3,12 @@ export default {
     if (request.method !== "POST") return new Response("OK");
     const body = await request.json();
 
-    // 1. Handle /start
     if (body.message && body.message.text === "/start") {
       await sendTelegram(env.TELEGRAM_BOT_TOKEN, body.message.chat.id, 
         "🏛️ <b>HERMES Terminal Analyst</b>\n\nSilakan pilih aset:", getAssetsKeyboard());
       return new Response("OK");
     }
 
-    // 2. Handle Tombol
     if (body.callback_query) {
       const cb = body.callback_query;
       const data = cb.data.split("|");
@@ -29,7 +27,16 @@ export default {
         const symbol = data[1], tf = data[2];
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
           `⏳ Menghubungi GitHub Actions untuk menganalisa ${symbol} [${tf}]...\nMohon tunggu 1-2 menit.`);
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, tf);
+        
+        try {
+          const ghResponse = await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, tf);
+          if (!ghResponse.ok) {
+             const errText = await ghResponse.text();
+             await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `❌ <b>Gagal nembak GitHub:</b>\nStatus: ${ghResponse.status}\nPesan: ${errText}\n\nCek Branch/Token di Cloudflare!`);
+          }
+        } catch (err) {
+          await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `❌ <b>Error Sistem:</b>\n${err.message}`);
+        }
       }
       return new Response("OK");
     }
@@ -46,10 +53,13 @@ async function sendTelegram(token, chatId, text, replyMarkup = null) {
 }
 
 async function triggerGitHub(token, user, repo, symbol, tf) {
-  await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
+  return await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "User-Agent": "Cloudflare" },
-    body: JSON.stringify({ ref: "main", inputs: { symbol: symbol, tf: tf } })
+    body: JSON.stringify({ 
+      ref: "main", // <--- PENTING: Kalau branch utama repo lo namanya "master", ganti teks ini jadi "master"
+      inputs: { symbol: symbol, tf: tf } 
+    })
   });
 }
 
