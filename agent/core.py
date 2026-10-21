@@ -6,7 +6,6 @@ from agent.setup_tracker import validate_and_update
 
 def analyze_market(symbol: str) -> dict:
     try:
-        # 1. Fetch Data (H1, M15, M1) - Hardcoded!
         if symbol == "NASDAQ":
             df_h1 = fetch_yfinance("NASDAQ", "H1")
             df_m15 = fetch_yfinance("NASDAQ", "M15")
@@ -31,18 +30,20 @@ def analyze_market(symbol: str) -> dict:
 
         current_price = float(df_m15["close"].iloc[-1])
 
-        # 2. Analisa ICT
         ict_h1 = analyze_ict_structure(df_h1, df_smt, df_dxy)
         ict_m15 = analyze_ict_structure(df_m15, df_smt, df_dxy)
         ict_m1 = analyze_ict_structure(df_m1, df_smt, df_dxy)
         
-        # 3. AI Decision
         decision = decide(symbol, ict_h1, ict_m15, ict_m1)
         
         decision["df_ohlcv"] = df_m15.tail(60).to_dict(orient="records")
         decision["current_price"] = current_price
         
-        # 4. Tracker (Kita set default M15 buat tracking)
+        # --- SUNTIK DATA LIKUIDITAS BUAT CHART WAIT ---
+        decision["liquidity"] = ict_m15.get("liquidity_summary", {})
+        decision["recent_swings"] = ict_m15.get("recent_swings", [])
+        # ----------------------------------------------
+        
         tracker_msg = validate_and_update(symbol, "M15", decision, current_price)
         
         ok, reason = sanity_check(decision)
