@@ -4,26 +4,32 @@ on:
   workflow_dispatch:
     inputs:
       symbol:
-        description: 'Simbol (XAUUSD / NASDAQ)'
-        required: true
+        description: 'Simbol'
+        required: false
       tf:
-        description: 'Timeframe (M15 / H1 / H4 / D1)'
-        required: true
+        description: 'Timeframe'
+        required: false
+      cmd:
+        description: 'Command'
+        required: false
+      args:
+        description: 'Arguments'
+        required: false
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # Izin commit
+          fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      # --- TAMBAHAN BARU: Clone Kronos Resmi ---
       - name: Clone Kronos Official Repo
         run: |
           git clone https://github.com/shiyu-coder/Kronos.git /tmp/Kronos
@@ -36,7 +42,18 @@ jobs:
       - name: Run Agent Handler
         env:
           PYTHONPATH: /tmp/Kronos:$PYTHONPATH
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python handler.py --symbol ${{ github.event.inputs.symbol }} --tf ${{ github.event.inputs.tf }}
+        run: |
+          python handler.py --symbol "${{ github.event.inputs.symbol }}" --tf "${{ github.event.inputs.tf }}" --cmd "${{ github.event.inputs.cmd }}" --args "${{ github.event.inputs.args }}"
+
+      # Commit balik file active_setups.json dan journal.db
+      - name: Commit and Push Updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add active_setups.json journal.db || true
+          git commit -m "Update setup & journal data [skip ci]" || true
+          git push || true
