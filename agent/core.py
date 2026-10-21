@@ -9,48 +9,43 @@ from agent.setup_tracker import validate_and_update
 
 def analyze_market(symbol: str, timeframe: str) -> dict:
     try:
-        # 1. Tentukan Timeframe MTF
-        tf_h1 = "H1"
-        tf_m15 = timeframe # Sesuai pilihan user (M15)
-        
-        # 2. Fetch Data MTF
+        # 1. Fetch Data (H1, M15, M1)
         if symbol == "NASDAQ":
-            df_h1 = fetch_yfinance("NASDAQ", tf_h1)
-            df_m15 = fetch_yfinance("NASDAQ", tf_m15)
+            df_h1 = fetch_yfinance("NASDAQ", "H1")
+            df_m15 = fetch_yfinance("NASDAQ", "M15")
+            df_m1 = fetch_yfinance("NASDAQ", "M1")
         else:
-            df_h1 = fetch_twelvedata(symbol, tf_h1)
-            df_m15 = fetch_twelvedata(symbol, tf_m15)
+            df_h1 = fetch_twelvedata(symbol, "H1")
+            df_m15 = fetch_twelvedata(symbol, "M15")
+            df_m1 = fetch_twelvedata(symbol, "M1")
             
-        df_dxy = fetch_yfinance("DXY", tf_m15)
+        df_dxy = fetch_yfinance("DXY", timeframe)
 
         if symbol == "XAUUSD":
-            df_smt = fetch_yfinance("XAG", tf_m15)
+            df_smt = fetch_yfinance("XAG", timeframe)
         elif symbol == "NASDAQ":
-            df_smt = fetch_yfinance("SPX", tf_m15)
+            df_smt = fetch_yfinance("SPX", timeframe)
         elif symbol == "GBPUSD":
-            df_smt = fetch_yfinance("EUR", tf_m15) 
+            df_smt = fetch_yfinance("EUR", timeframe) 
         elif symbol == "USDJPY":
-            df_smt = fetch_yfinance("CHF", tf_m15) 
+            df_smt = fetch_yfinance("CHF", timeframe) 
         else:
             df_smt = df_m15.copy()
 
         current_price = float(df_m15["close"].iloc[-1])
 
-        # 3. Analisa ICT di M15 & H1
-        session = compute_asian_session(df_m15)
-        kronos = kronos_forecast(df_m15, horizon=12)
-        stats  = compute_stats(df_m15)
-        
+        # 2. Analisa ICT
         ict_h1 = analyze_ict_structure(df_h1, df_smt, df_dxy)
         ict_m15 = analyze_ict_structure(df_m15, df_smt, df_dxy)
+        ict_m1 = analyze_ict_structure(df_m1, df_smt, df_dxy)
         
-        # 4. AI Decision (Kirim data H1 & M15)
-        decision = decide(symbol, kronos, stats, ict_h1, ict_m15, session)
+        # 3. AI Decision (Kirim 3 TF)
+        decision = decide(symbol, ict_h1, ict_m15, ict_m1)
         
         decision["df_ohlcv"] = df_m15.tail(60).to_dict(orient="records")
         decision["current_price"] = current_price
         
-        # 5. Tracker
+        # 4. Tracker
         tracker_msg = validate_and_update(symbol, timeframe, decision, current_price)
         
         ok, reason = sanity_check(decision)
