@@ -9,7 +9,6 @@ from agent.setup_tracker import validate_and_update
 
 def analyze_market(symbol: str, timeframe: str) -> dict:
     try:
-        # 1. Fetch Data Utama (Beda sumber buat NASDAQ dan selain NASDAQ)
         if symbol == "NASDAQ":
             df_main = fetch_yfinance("NASDAQ", timeframe)
         else:
@@ -17,7 +16,6 @@ def analyze_market(symbol: str, timeframe: str) -> dict:
             
         df_dxy = fetch_yfinance("DXY", timeframe)
 
-        # 2. Fetch Data SMT (yfinance)
         if symbol == "XAUUSD":
             df_smt = fetch_yfinance("XAG", timeframe)
         elif symbol == "NASDAQ":
@@ -31,20 +29,19 @@ def analyze_market(symbol: str, timeframe: str) -> dict:
 
         current_price = float(df_main["close"].iloc[-1])
 
-        # 3. Jalankan Layer Analisa
         session = compute_asian_session(df_main)
         kronos = kronos_forecast(df_main, horizon=12)
         stats  = compute_stats(df_main)
         ict_data = analyze_ict_structure(df_main, df_smt, df_dxy)
         
-        # 4. AI Decision
         decision = decide(symbol, kronos, stats, ict_data, session)
         
-        # 5. Sisipkan data Debug
+        # --- Bawa Data OHLCV untuk digambar ---
+        decision["df_ohlcv"] = df_main.tail(60).to_dict(orient="records")
+        
         decision["data_len"] = ict_data.get("data_len", 0)
         decision["swing_len"] = ict_data.get("swing_len", 0)
         
-        # 6. Setup Tracker & Sanity Check
         tracker_msg = validate_and_update(symbol, timeframe, decision, current_price)
         
         ok, reason = sanity_check(decision)
