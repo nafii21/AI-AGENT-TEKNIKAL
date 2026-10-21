@@ -2,7 +2,7 @@ import json, os
 from openai import OpenAI
 
 client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.environ.get("OPENROUTER_API_KEY", ""))
-MODEL_ID = "z-ai/glm-4.5-air:free"
+MODEL_ID = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 SYSTEM_PROMPT = """
 Kamu adalah analis teknikal "sniper" dengan keahlian SMC/ICT, Khusus ASIAN SESSION untuk XAUUSD dan NASDAQ (futures).
