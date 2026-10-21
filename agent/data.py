@@ -3,6 +3,7 @@ import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
+# Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "NASDAQ": "QQQ",
@@ -10,6 +11,7 @@ TWELVE_SYMBOLS = {
     "USDJPY": "USD/JPY"
 }
 
+# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
@@ -39,7 +41,6 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
     df = pd.DataFrame(resp["values"])
     df = df.rename(columns={"datetime": "timestamps"})
     
-    # Bersihin data
     for col in ["open", "high", "low", "close"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -95,4 +96,4 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
         df = df.set_index("timestamps")
         df = df.resample('4h').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'}).dropna().reset_index()
 
-    retureturn
+    return df
