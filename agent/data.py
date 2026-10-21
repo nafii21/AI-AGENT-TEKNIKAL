@@ -3,14 +3,16 @@ import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
+# Aset Utama pakai Twelve Data (HANYA YANG LOLOS FREE TIER)
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
-    "NASDAQ": "QQQ",
     "GBPUSD": "GBP/USD",
     "USDJPY": "USD/JPY"
 }
 
+# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
+    "NASDAQ": "NQ=F",  # <-- NASDAQ DIPINDAH KE SINI (Nasdaq Futures asli)
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
     "SPX": "ES=F",
