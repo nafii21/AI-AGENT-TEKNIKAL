@@ -2,11 +2,9 @@ import pandas as pd
 import torch
 import sys
 
-# Tambahin path repo Kronos yang udah di-clone
 sys.path.append("/tmp/Kronos")
 from model import Kronos, KronosTokenizer, KronosPredictor
 
-# Load model sekali aja (biar nggak lemot)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 tokenizer = KronosTokenizer.from_pretrained("NeoQuasar/Kronos-Tokenizer-base")
 model = Kronos.from_pretrained("NeoQuasar/Kronos-small").to(device)
@@ -21,7 +19,6 @@ def kronos_forecast(df: pd.DataFrame, horizon: int = 12) -> dict:
         freq = pd.infer_freq(x_ts) or "1h"
         y_ts = pd.date_range(last_ts, periods=horizon + 1, freq=freq)[1:]
 
-        # Pake predictor resmi
         pred = predictor.predict(
             df=hist[["open", "high", "low", "close", "volume", "amount"]],
             x_timestamp=x_ts,
