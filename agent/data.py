@@ -2,12 +2,14 @@ import os, httpx, pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 TF_MAP = {"M15": "15min", "H1": "1h", "H4": "4h", "D1": "1day"}
+
+# Kita pakai proxy ETF & Forex biar lolos free tier Twelve Data
 SYMBOLS = {
     "XAUUSD": "XAU/USD",
-    "NASDAQ": "NDX",       # Ini juga mungkin kena limit, lihat catatan di bawah
-    "XAGUSD": "XAG/USD",
-    "US500": "SPX",        # Ini juga mungkin kena limit
-    "DXY": "EUR/USD"       # <-- GANTI INI
+    "NASDAQ": "QQQ",       # Proxy Nasdaq 100
+    "XAGUSD": "XAG/USD",   # Silver untuk SMT
+    "US500": "SPY",        # Proxy S&P 500 untuk SMT NASDAQ
+    "DXY": "EUR/USD"       # Proxy DXY (Inverse)
 }
 
 def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> pd.DataFrame:
