@@ -14,13 +14,15 @@ def validate_and_update(symbol: str, tf: str, new_decision: dict, current_price:
     setups = load_setups()
     key = f"{symbol}_{tf}"
     status_msg = ""
-    now = datetime.now()
+    
+    # Pakai UTC karena server GitHub Actions pakai UTC
+    now = datetime.utcnow()
 
     if key in setups:
         old = setups[key]
         action = old.get("action")
         
-        # Cek Expiry
+        # 1. Cek Expiry
         expiry_str = old.get("expiry_time")
         if expiry_str:
             expiry = datetime.fromisoformat(expiry_str)
@@ -29,7 +31,7 @@ def validate_and_update(symbol: str, tf: str, new_decision: dict, current_price:
                 save_setups(setups)
                 return f"⚠️ Setup {action} sebelumnya EXPIRED (Waktu habis). Mencari setup baru..."
 
-        # Cek Zona Entry
+        # 2. Cek Harga vs Zona
         zone_min = old.get("entry_zone_min", 0)
         zone_max = old.get("entry_zone_max", 0)
         sl = old.get("sl", 0)
@@ -48,9 +50,10 @@ def validate_and_update(symbol: str, tf: str, new_decision: dict, current_price:
         else:
             status_msg = f"⏳ Setup {action} {symbol} [{tf}] PENDING (Menunggu harga masuk zona)."
 
-    # Simpan setup baru
+    # Simpan setup baru jika action bukan WAIT
     if new_decision.get("action") in ("BUY_LIMIT", "SELL_LIMIT"):
-        expiry_time = now + timedelta(minutes=new_decision.get("validity_mins", 45))
+        validity = new_decision.get("validity_mins", 45)
+        expiry_time = now + timedelta(minutes=validity)
         new_decision["expiry_time"] = expiry_time.isoformat()
         new_decision["created_at"] = now.isoformat()
         setups[key] = new_decision
