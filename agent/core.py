@@ -1,4 +1,4 @@
-from agent.data import fetch_twelvedata
+from agent.data import fetch_twelvedata, fetch_yfinance
 from agent.kronos_layer import kronos_forecast
 from agent.stats_layer import compute_stats
 from agent.ict_layer import analyze_ict_structure
@@ -9,17 +9,17 @@ from agent.setup_tracker import validate_and_update
 
 def analyze_market(symbol: str, timeframe: str) -> dict:
     try:
-        # Fetch Data Utama & DXY Proxy (EUR/USD)
+        # 1. Fetch Data Utama (Twelve Data) & DXY (yfinance)
         df_main = fetch_twelvedata(symbol, timeframe)
-        df_dxy = fetch_twelvedata("DXY", timeframe)
+        df_dxy = fetch_yfinance("DXY", timeframe)
 
-        # Fetch Data SMT (XAU pakai AUD/USD, NASDAQ pakai SPY)
+        # 2. Fetch Data SMT (yfinance)
         if symbol == "XAUUSD":
-            df_smt = fetch_twelvedata("AUDUSD", timeframe)
+            df_smt = fetch_yfinance("XAG", timeframe)
         elif symbol == "NASDAQ":
-            df_smt = fetch_twelvedata("US500", timeframe)
+            df_smt = fetch_yfinance("SPX", timeframe)
         else:
-            df_smt = fetch_twelvedata(symbol, timeframe)
+            df_smt = df_main.copy()
 
         current_price = float(df_main["close"].iloc[-1])
 
