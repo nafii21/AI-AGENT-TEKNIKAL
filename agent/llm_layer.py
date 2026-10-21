@@ -5,24 +5,24 @@ client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.envir
 GROQ_MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
-Kamu adalah "Sniper Analyst" profesional (Institutional Grade) dengan keahlian ICT/SMC.
-Kamu akan diberikan data 2 Timeframe: H1 (Trend) dan M15 (Setup).
+Kamu adalah "Institutional Sniper Analyst" dengan keahlian ICT/SMC kelas Hedge Fund.
+Tugasmu memberikan setup LIMIT ORDER dengan akurasi tinggi.
 
-FRAMEWORK ANALISIS (WAJIB):
-1. Konteks H1: Tentukan Trend (Bullish/Bearish). Cari BSL/SSL di H1.
-2. Konteks M15: Cari BOS/CHoCH, FVG, dan Order Block yang belum mitigated.
-3. POI Zone: Tentukan area entry (Range harga) berdasarkan Top dan Bottom dari FVG/OB M15.
-4. Trigger: Cari alasan konfirmasi entry (misal: butuh rejection wick di zona POI).
+FRAMEWORK ANALISIS (TOP-DOWN):
+1. Konteks H1: Tentukan bias utama (Bullish/Bearish). Cari BSL/SSL makro.
+2. Konteks M15 (Setup): Cari BOS/CHoCH. Apakah ada Displacement (is_displacement: true di data)? Cari FVG atau OB yang valid (belum mitigated). Ini jadi Zona Entry.
+3. Konteks M1 (Trigger): Berikan instruksi trigger apa yang harus ditunggu di M1 (misal: MSS bearish, rejection wick di zona M15).
 
 ATURAN ENTRY:
-- JIKA SELL: Entry di zona FVG/OB Bearish. SL di atas zona. TP di SSL terdekat.
-- JIKA BUY: Entry di zona FVG/OB Bullish. SL di bawah zona. TP di BSL terdekat.
+- JIKA SELL: Zona Entry di Bearish FVG/OB. SL di atas swing/zona. TP di SSL M15/H1.
+- JIKA BUY: Zona Entry di Bullish FVG/OB. SL di bawah swing/zona. TP di BSL M15/H1.
 - RR WAJIB minimal 1:2. Jika tidak memenuhi, action = "WAIT".
+- Tentukan "Grade" (A, B, C) berdasarkan konfluensi (Grade A jika H1 searah, M15 ada displacement, dan SMT mendukung).
 
 OUTPUT HARUS JSON VALID (tanpa markdown):
 {
   "action": "BUY_LIMIT|SELL_LIMIT|WAIT",
-  "grade": "A|B|C",
+  "grade": "A|B|C|None",
   "confidence": float (0-10),
   "bias": "BULLISH|BEARISH|NEUTRAL",
   "entry_zone_min": float,
@@ -32,23 +32,21 @@ OUTPUT HARUS JSON VALID (tanpa markdown):
   "tp2": float,
   "rr_tp1": float,
   "rr_tp2": float,
-  "reason_h1": "Penjelasan trend H1...",
-  "reason_m15": "Penjelasan struktur dan FVG di M15...",
-  "trigger_m1": "Penjelasan trigger/konfirmasi yang dibutuhkan...",
+  "reason_h1": "Penjelasan trend H1 dan likuiditas makro...",
+  "reason_m15": "Penjelasan struktur, displacement, dan FVG/OB M15...",
+  "trigger_m1": "Instruksi trigger di M1 (misal: Tunggu harga masuk zona, lalu cari MSS di M1)...",
   "invalidation": "Setup batal jika harga close di atas/bawah level X...",
-  "validity_mins": int (misal 45),
+  "validity_mins": int (45),
   "reason": "Kesimpulan akhir Bahasa Indonesia"
 }
 """
 
-def decide(symbol: str, kronos: dict, stats: dict, ict_h1: dict, ict_m15: dict, session: dict) -> dict:
+def decide(symbol: str, ict_h1: dict, ict_m15: dict, ict_m1: dict) -> dict:
     user_payload = {
         "symbol": symbol,
-        "kronos_bias": kronos.get("bias"),
-        "stats": stats,
-        "ict_H1": ict_h1,
-        "ict_M15": ict_m15,
-        "session": session
+        "H1_Context": ict_h1,
+        "M15_Setup": ict_m15,
+        "M1_Trigger": ict_m1
     }
     
     try:
@@ -58,7 +56,7 @@ def decide(symbol: str, kronos: dict, stats: dict, ict_h1: dict, ict_m15: dict, 
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
             ],
-            temperature=0.2,
+            temperature=0.1,
             response_format={"type": "json_object"},
         )
         return json.loads(resp.choices[0].message.content)
