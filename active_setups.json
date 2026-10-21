@@ -1,1 +1,22 @@
-{}
+{
+  "XAUUSD_M15": {
+    "action": "BUY_LIMIT",
+    "grade": "A",
+    "confidence": 8.5,
+    "bias": "BULLISH",
+    "entry_zone_min": 4140.5,
+    "entry_zone_max": 4140.9,
+    "sl": 4124.5,
+    "tp1": 4195.9990234375,
+    "tp2": 4199.6552734375,
+    "rr_tp1": 3.4,
+    "rr_tp2": 3.6,
+    "reason_h1": "Pada timeframe H1 terlihat bias bullish. Harga saat ini 4140.71 berada di atas level SSL terakhir (4137.47) dan sudah menembus level BSL pertama (4137.73) yang menandakan tekanan beli kuat. Struktur swing menunjukkan swing high terbaru di 4155.90 dan swing low di 4106.88, dengan BOS terakhir bullish pada 4129.50. Likuiditas bullish (BSL) terdekat berada di 4195.99 dan 4199.66, memberi target profit yang jelas.",
+    "reason_m15": "Di M15 terdapat CHoCH naik pada level 4141.13 (index 486) yang menandakan perubahan karakter bullish. Tidak ada order block atau FVG aktif, namun CHoCH bersama dengan BOS up sebelumnya (4125.09) memberikan konfluensi kuat. Harga berada sedikit di bawah level CHoCH, cocok untuk limit buy di zona 4140.5\u20114140.9. Struktur swing M15 menegaskan low terdekat di sekitar 4124.70, cocok untuk penempatan SL.",
+    "trigger_m1": "Tunggu candle M1 menutup di atas level 4141.13 dengan close bullish (misalnya bullish engulfing atau pin bar bullish). Konfirmasi break di atas CHoCH menjadi trigger untuk mengaktifkan limit order yang sudah ditempatkan.",
+    "invalidation": "Setup batal jika harga menutup di bawah 4124.0 atau menembus swing low terdekat M15 (\u22484124.70).",
+    "validity_mins": 45,
+    "reason": "Setup BUY_LIMIT pada XAUUSD dengan konfluensi H1 bullish, CHoCH naik M15 di 4141.13, dan risk\u2011reward >1:2 (RR\u22483.4\u20113.6). Entry di zona 4140.5\u20114140.9, SL 4124.5, TP1 4195.99, TP2 4199.66. Grade A, confidence tinggi.",
+    "df_ohlcv": [
+      {
+        "timestamps": 
