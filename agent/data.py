@@ -46,9 +46,10 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
     df = df.dropna(subset=["open", "high", "low", "close"])
     
     if "volume" not in df.columns:
-        df["volume"] = 0
+        df["volume"] = 1
     else:
-        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0)
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(1)
+        df.loc[df["volume"] == 0, "volume"] = 1
         
     df["timestamps"] = pd.to_datetime(df["timestamps"])
     df = df.sort_values("timestamps").reset_index(drop=True)
@@ -88,9 +89,10 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
     df = df.dropna(subset=["open", "high", "low", "close"])
     
     if "volume" not in df.columns:
-        df["volume"] = 0
+        df["volume"] = 1
     else:
-        df["volume"] = df["volume"].fillna(0)
+        df["volume"] = df["volume"].fillna(1)
+        df.loc[df["volume"] == 0, "volume"] = 1
         
     df["amount"] = df["close"] * df["volume"]
 
