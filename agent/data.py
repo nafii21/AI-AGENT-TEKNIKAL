@@ -3,16 +3,14 @@ import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
-# Aset Utama pakai Twelve Data (HANYA YANG LOLOS FREE TIER)
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "GBPUSD": "GBP/USD",
     "USDJPY": "USD/JPY"
 }
 
-# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
-    "NASDAQ": "NQ=F",  # <-- NASDAQ DIPINDAH KE SINI (Nasdaq Futures asli)
+    "NASDAQ": "NQ=F",  
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
     "SPX": "ES=F",
@@ -21,6 +19,7 @@ YF_SYMBOLS = {
 }
 
 TF_MAP_TWELVE = {
+    "M1": "1min",    # <-- TAMBAHAN
     "M5": "5min",
     "M15": "15min", 
     "H1": "1h", 
@@ -65,7 +64,10 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
 def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
     ticker = YF_SYMBOLS.get(symbol_key, symbol_key)
     
-    if timeframe == "M5":
+    # yfinance max M1 is 7d, M5 is 60d, M15 is 60d
+    if timeframe == "M1":
+        interval, period = "1m", "5d"
+    elif timeframe == "M5":
         interval, period = "5m", "5d"
     elif timeframe == "M15":
         interval, period = "15m", "5d"
