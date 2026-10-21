@@ -1,4 +1,4 @@
-import os, argparse, httpx, json, traceback, sys
+import os, argparse, httpx, json, traceback
 from agent.core import analyze_market
 from agent.journal import add_journal, get_journals
 
@@ -12,10 +12,10 @@ def send_tg(text):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--symbol", help="Symbol (XAUUSD/NASDAQ)")
-    parser.add_argument("--tf", help="Timeframe")
-    parser.add_argument("--cmd", help="Command (journal/addjournal)")
-    parser.add_argument("--args", help="Argument tambahan (JSON string)")
+    parser.add_argument("--symbol")
+    parser.add_argument("--tf")
+    parser.add_argument("--cmd")
+    parser.add_argument("--args")
     args = parser.parse_args()
 
     if args.cmd == "journal":
@@ -35,7 +35,6 @@ def main():
         send_tg("✅ Journal berhasil disimpan!")
         return
 
-    # --- Eksekusi Analisa Market ---
     if not args.symbol or not args.tf:
         send_tg("❌ Symbol atau Timeframe tidak valid.")
         return
@@ -51,7 +50,7 @@ def main():
         emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
         text = (
-            f"{emoji} <b>[HERMES SNIPER // ICT + SMT + DXY]</b>\n"
+            f"{emoji} <b>[HERMES SNIPER // ICT + SMT]</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"📊 Instrumen: <b>{args.symbol}</b> [{args.tf}]\n"
             f"⚡ Setup: <b>{action}</b>\n"
@@ -60,7 +59,7 @@ def main():
             f"🎯 TP1: <code>{decision.get('tp1', '-')}</code> | TP2: <code>{decision.get('tp2', '-')}</code>\n"
             f"📊 RR: <b>{decision.get('rr', '-')}</b> | Conf: <b>{decision.get('confidence', 0)*100:.0f}%</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"🧠 <b>ICT/SMT:</b> {decision.get('setup', '-')}\n"
+            f"🧠 <b>Setup:</b> {decision.get('setup', '-')}\n"
             f"💡 <b>Reason:</b> {decision.get('reason', '-')}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
             f"{decision.get('tracker_msg', '')}\n"
