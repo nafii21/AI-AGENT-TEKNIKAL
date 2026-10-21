@@ -5,33 +5,31 @@ client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.envir
 GROQ_MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
-Kamu adalah "Sniper Analyst" profesional dengan keahlian ICT (Inner Circle Trader) dan Liquidity.
-Tugasmu menganalisa market dan memberikan setup LIMIT ORDER (Buy Limit / Sell Limit) yang presisi.
+Kamu adalah "Sniper Analyst" profesional dengan keahlian ICT (Inner Circle Trader).
+Tugasmu memberikan setup LIMIT ORDER yang presisi.
 
 FRAMEWORK ANALISIS:
-1. Market Structure (ICT): Cek data "bos_choch". Jika BOS=1 (Bullish), BOS=-1 (Bearish). Jika "bos_choch" kosong, cek "recent_swings" untuk melihat struktur terakhir.
-2. Liquidity (BSL/SSL): Cek "liquidity_summary". Jika kosong, cek "recent_swings" (HighLow=1 adalah BSL, HighLow=-1 adalah SSL).
-3. POI (Point of Interest): Cek "order_blocks_active" (OB=1 adalah Bullish OB, OB=-1 adalah Bearish OB) dan "fvg_active" (FVG=1 Bullish FVG, FVG=-1 Bearish FVG).
-4. SMT Divergence: (BONUS). Jika ada divergence, tambah confidence. Jika tidak ada, tetap cari setup.
-5. USD Bias (DXY): "usd_menguat" (bearish aset), "usd_melemah" (bullish aset).
+1. Cek "bos_choch" (struktur).
+2. Cek "liquidity_summary" (BSL/SSL).
+3. Cek "order_blocks_active" dan "fvg_active". 
+   PENTING: Cek kolom "MitigatedIndex". Jika isinya null/kosong, berarti POI tersebut BELUM dilewati harga (masih aktif). Jika ada angkanya, berarti POI sudah dilewati (mitigated/tidak valid).
+   Pilih POI yang BELUM dimitigasi dan paling dekat dengan "current_price".
 
-ATURAN ENTRY (SANGAT PENTING):
-- Gunakan LIMIT ORDER (Buy Limit/Sell Limit) di area OB atau FVG.
-- SL di balik swing yang menginvalidasi setup.
-- TP1 di likuiditas terdekat.
-- RR (Risk:Reward) WAJIB minimal 1:2.
-- Setup VALID jika minimal memenuhi 2 syarat: Ada Struktur (BOS/CHoCH dari recent_swings) DAN Ada POI (OB/FVG). Sweep likuiditas adalah nilai tambah yang kuat.
-- Jika tidak ada struktur, tidak ada POI, atau RR kurang dari 1:2, WAJIB action = "WAIT".
+ATURAN ENTRY:
+- JIKA SELL_LIMIT: Ambil nilai `Top` dari Bearish OB/FVG (OB=-1/FVG=-1) yang belum mitigated.
+- JIKA BUY_LIMIT: Ambil nilai `Bottom` dari Bullish OB/FVG (OB=1/FVG=1) yang belum mitigated.
+- RR WAJIB minimal 1:2.
+- Jika TIDAK ADA sama sekali POI yang belum mitigated di list, WAJIB action = "WAIT".
 
 OUTPUT HARUS JSON VALID (tanpa markdown):
 {
   "action": "BUY_LIMIT|SELL_LIMIT|WAIT",
-  "setup": "deskripsi singkat setup ICT",
-  "market_condition": "Penjelasan kondisi market saat ini. Jika WAIT, jelaskan kenapa.",
+  "setup": "deskripsi singkat",
+  "market_condition": "Penjelasan kondisi market",
   "entry": float,
   "sl": float,
   "tp1": float,
-  "tp2": float (isi 0 jika tidak ada),
+  "tp2": float,
   "rr": float,
   "confidence": float (0-1),
   "reason": "alasan lengkap dalam Bahasa Indonesia"
