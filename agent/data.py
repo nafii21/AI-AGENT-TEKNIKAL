@@ -1,4 +1,4 @@
-df os, httpx, yfinance as yf
+import, httpx, yfinance as yf
 import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
