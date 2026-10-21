@@ -43,6 +43,10 @@ def main():
         action = decision.get("action", "WAIT")
         emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
+        # Tampilkan data_len untuk debug
+        data_len = decision.get("data_len", 0)
+        swing_len = decision.get("swing_len", 0)
+        
         text = (
             f"{emoji} <b>[HERMES SNIPER // ICT + LIQUIDITY]</b>\n"
             f"━━━━━━━━━━━━━━━━━━\n"
@@ -57,6 +61,7 @@ def main():
             f"🧠 <b>Setup:</b> {decision.get('setup', '-')}\n"
             f"💡 <b>Reason:</b> {decision.get('reason', '-')}\n"
             f"━━━━━━━━━━━━━━━━━━\n"
+            f"<i>Debug: {data_len} bars | {swing_len} swings</i>\n"
             f"{decision.get('tracker_msg', '')}\n"
             f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
         )
