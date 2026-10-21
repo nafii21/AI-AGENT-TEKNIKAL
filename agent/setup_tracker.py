@@ -1,4 +1,5 @@
 import json, os
+
 SETUP_FILE = "active_setups.json"
 
 def load_setups() -> dict:
