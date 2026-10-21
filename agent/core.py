@@ -9,33 +9,28 @@ from agent.setup_tracker import validate_and_update
 
 def analyze_market(symbol: str, timeframe: str) -> dict:
     try:
-        # 1. Fetch Data Utama & DXY
+        # Fetch Data Utama & DXY Proxy (EUR/USD)
         df_main = fetch_twelvedata(symbol, timeframe)
         df_dxy = fetch_twelvedata("DXY", timeframe)
 
-        # 2. Fetch Data SMT (XAU pakai XAG, NASDAQ pakai US500)
+        # Fetch Data SMT
         if symbol == "XAUUSD":
             df_smt = fetch_twelvedata("XAGUSD", timeframe)
         elif symbol == "NASDAQ":
             df_smt = fetch_twelvedata("US500", timeframe)
         else:
-            df_smt = fetch_twelvedata(symbol, timeframe) # Fallback
+            df_smt = fetch_twelvedata(symbol, timeframe)
 
         current_price = float(df_main["close"].iloc[-1])
 
-        # 3. Jalankan Layer
         session = compute_asian_session(df_main)
         kronos = kronos_forecast(df_main, horizon=12)
         stats  = compute_stats(df_main)
         ict_data = analyze_ict_structure(df_main, df_smt, df_dxy)
         
-        # 4. LLM Decision
         decision = decide(symbol, kronos, stats, ict_data, session)
-        
-        # 5. Validasi Setup Lama & Simpan Baru
         tracker_msg = validate_and_update(symbol, timeframe, decision, current_price)
         
-        # 6. Sanity Check
         ok, reason = sanity_check(decision)
         if not ok and decision.get("action") != "WAIT":
             decision["action"] = "WAIT"
