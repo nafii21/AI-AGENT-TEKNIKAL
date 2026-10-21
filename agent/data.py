@@ -3,7 +3,6 @@ import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
-# Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "NASDAQ": "QQQ",
@@ -11,7 +10,6 @@ TWELVE_SYMBOLS = {
     "USDJPY": "USD/JPY"
 }
 
-# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
@@ -54,6 +52,10 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
         
     df["timestamps"] = pd.to_datetime(df["timestamps"])
     df = df.sort_values("timestamps").reset_index(drop=True)
+    
+    if df.empty:
+        raise ValueError(f"Data kosong setelah dibersihkan untuk {symbol}")
+        
     df["amount"] = df["close"] * df["volume"]
     return df
 
