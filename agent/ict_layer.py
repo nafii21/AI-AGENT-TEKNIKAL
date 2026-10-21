@@ -4,7 +4,12 @@ from smartmoneyconcepts import smc
 def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: pd.DataFrame) -> dict:
     d = df_main.set_index("timestamps")[["open", "high", "low", "close", "volume"]].copy()
     
-    swing_hl = smc.swing_highs_lows(d, swing_length=10)
+    # Paksa index jadi DatetimeIndex dan urut
+    d.index = pd.to_datetime(d.index)
+    d = d.sort_index()
+    
+    # Pake swing_length 5 biar lebih reaktif di Time Frame kecil
+    swing_hl = smc.swing_highs_lows(d, swing_length=5)
     bos_choch = smc.bos_choch(d, swing_hl)
     ob = smc.ob(d, swing_hl)
     fvg = smc.fvg(d)
@@ -59,6 +64,8 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
             ssl_levels.append(x.get("Level"))
 
     return {
+        "data_len": len(d),
+        "swing_len": len(swing_hl) if swing_hl is not None else 0,
         "bos_choch": _clean(bos_choch.tail(3).reset_index().to_dict("records") if bos_choch is not None and not bos_choch.empty else []),
         "order_blocks_active": _active(ob),
         "fvg_active": _active(fvg),
