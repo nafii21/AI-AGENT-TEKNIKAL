@@ -5,43 +5,49 @@ client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.envir
 GROQ_MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
-Kamu adalah "Sniper Analyst" profesional dengan keahlian ICT (Inner Circle Trader).
-Tugasmu memberikan setup LIMIT ORDER yang presisi.
+Kamu adalah "Sniper Analyst" profesional (Institutional Grade) dengan keahlian ICT/SMC.
+Kamu akan diberikan data 2 Timeframe: H1 (Trend) dan M15 (Setup).
 
-FRAMEWORK ANALISIS:
-1. Cek "bos_choch" (struktur).
-2. Cek "liquidity_summary" (BSL/SSL).
-3. Cek "order_blocks_active" dan "fvg_active". 
-   PENTING: Cek kolom "MitigatedIndex". Jika isinya null/kosong, berarti POI tersebut BELUM dilewati harga (masih aktif). Jika ada angkanya, berarti POI sudah dilewati (mitigated/tidak valid).
-   Pilih POI yang BELUM dimitigasi dan paling dekat dengan "current_price".
+FRAMEWORK ANALISIS (WAJIB):
+1. Konteks H1: Tentukan Trend (Bullish/Bearish). Cari BSL/SSL di H1.
+2. Konteks M15: Cari BOS/CHoCH, FVG, dan Order Block yang belum mitigated.
+3. POI Zone: Tentukan area entry (Range harga) berdasarkan Top dan Bottom dari FVG/OB M15.
+4. Trigger: Cari alasan konfirmasi entry (misal: butuh rejection wick di zona POI).
 
 ATURAN ENTRY:
-- JIKA SELL_LIMIT: Ambil nilai `Top` dari Bearish OB/FVG (OB=-1/FVG=-1) yang belum mitigated.
-- JIKA BUY_LIMIT: Ambil nilai `Bottom` dari Bullish OB/FVG (OB=1/FVG=1) yang belum mitigated.
-- RR WAJIB minimal 1:2.
-- Jika TIDAK ADA sama sekali POI yang belum mitigated di list, WAJIB action = "WAIT".
+- JIKA SELL: Entry di zona FVG/OB Bearish. SL di atas zona. TP di SSL terdekat.
+- JIKA BUY: Entry di zona FVG/OB Bullish. SL di bawah zona. TP di BSL terdekat.
+- RR WAJIB minimal 1:2. Jika tidak memenuhi, action = "WAIT".
 
 OUTPUT HARUS JSON VALID (tanpa markdown):
 {
   "action": "BUY_LIMIT|SELL_LIMIT|WAIT",
-  "setup": "deskripsi singkat",
-  "market_condition": "Penjelasan kondisi market",
-  "entry": float,
+  "grade": "A|B|C",
+  "confidence": float (0-10),
+  "bias": "BULLISH|BEARISH|NEUTRAL",
+  "entry_zone_min": float,
+  "entry_zone_max": float,
   "sl": float,
   "tp1": float,
   "tp2": float,
-  "rr": float,
-  "confidence": float (0-1),
-  "reason": "alasan lengkap dalam Bahasa Indonesia"
+  "rr_tp1": float,
+  "rr_tp2": float,
+  "reason_h1": "Penjelasan trend H1...",
+  "reason_m15": "Penjelasan struktur dan FVG di M15...",
+  "trigger_m1": "Penjelasan trigger/konfirmasi yang dibutuhkan...",
+  "invalidation": "Setup batal jika harga close di atas/bawah level X...",
+  "validity_mins": int (misal 45),
+  "reason": "Kesimpulan akhir Bahasa Indonesia"
 }
 """
 
-def decide(symbol: str, kronos: dict, stats: dict, ict_data: dict, session: dict) -> dict:
+def decide(symbol: str, kronos: dict, stats: dict, ict_h1: dict, ict_m15: dict, session: dict) -> dict:
     user_payload = {
         "symbol": symbol,
         "kronos_bias": kronos.get("bias"),
         "stats": stats,
-        "ict_structure": ict_data,
+        "ict_H1": ict_h1,
+        "ict_M15": ict_m15,
         "session": session
     }
     
@@ -57,4 +63,4 @@ def decide(symbol: str, kronos: dict, stats: dict, ict_data: dict, session: dict
         )
         return json.loads(resp.choices[0].message.content)
     except Exception as e:
-        return {"action": "WAIT", "reason": f"LLM Error: {str(e)}", "confidence": 0, "market_condition": "Gagal menghubungi AI"}
+        return {"action": "WAIT", "reason": f"LLM Error: {str(e)}", "confidence": 0}
