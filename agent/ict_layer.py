@@ -2,11 +2,13 @@ import pandas as pd
 from smartmoneyconcepts import smc
 
 def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: pd.DataFrame) -> dict:
+    if df_main.empty: return {}
+    
     d = df_main.set_index("timestamps")[["open", "high", "low", "close", "volume"]].copy()
     d.index = pd.to_datetime(d.index)
     d = d.sort_index()
     
-    swing_hl = smc.swing_highs_lows(d, swing_length=10)
+    swing_hl = smc.swing_highs_lows(d, swing_length=5)
     bos_choch = smc.bos_choch(d, swing_hl)
     ob = smc.ob(d, swing_hl)
     fvg = smc.fvg(d)
@@ -23,26 +25,35 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
             out.append(rr)
         return out
 
-    # 1. BOS/CHoCH
     bos_data = []
     if bos_choch is not None and not bos_choch.empty:
         valid_bos = bos_choch.dropna(subset=["BOS", "CHOCH"], how="all")
-        bos_data = _clean(valid_bos.tail(10).reset_index().to_dict("records"))
+        
+        # Deteksi Displacement: Cek ukuran body candle BOS
+        valid_bos_list = valid_bos.tail(5).reset_index().to_dict("records")
+        for b in valid_bos_list:
+            idx = b["index"]
+            if idx in d.index:
+                candle = d.loc[idx]
+                body_size = abs(candle["close"] - candle["open"])
+                # Ambil ATR proxy 14 candle
+                atr = (d["high"] - d["low"]).rolling(14).mean().loc[idx]
+                if pd.notna(atr) and body_size > (1.2 * atr):
+                    b["is_displacement"] = True
+                else:
+                    b["is_displacement"] = False
+        bos_data = _clean(valid_bos_list)
 
-    # 2. OB (Ambil 20 terakhir, tandai mana yang udah mitigated)
     ob_data = []
     if ob is not None and not ob.empty:
-        # Kita TIDAK membuang yang mitigated, tapi kita ambil 20 terakhir
-        recent_ob = ob.tail(20) 
-        ob_data = _clean(recent_ob.reset_index().to_dict("records"))
+        valid_ob = ob[ob["MitigatedIndex"].isna()] if "MitigatedIndex" in ob.columns else ob
+        ob_data = _clean(valid_ob.tail(10).reset_index().to_dict("records"))
 
-    # 3. FVG (Ambil 20 terakhir, tandai mana yang udah mitigated)
     fvg_data = []
     if fvg is not None and not fvg.empty:
-        recent_fvg = fvg.tail(20)
-        fvg_data = _clean(recent_fvg.reset_index().to_dict("records"))
+        valid_fvg = fvg[fvg["MitigatedIndex"].isna()] if "MitigatedIndex" in fvg.columns else fvg
+        fvg_data = _clean(valid_fvg.tail(10).reset_index().to_dict("records"))
 
-    # 4. Liquidity (BSL/SSL)
     liq_data = []
     if liquidity is not None and not liquidity.empty:
         valid_liq = liquidity.dropna(subset=["Liquidity"])
@@ -51,13 +62,12 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     bsl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") in (1, "BSL")]
     ssl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") in (-1, "SSL")]
 
-    # 5. Swing Points
     swings_data = []
     if swing_hl is not None and not swing_hl.empty:
         valid_swings = swing_hl.dropna(subset=["HighLow"])
         swings_data = _clean(valid_swings.tail(10).reset_index().to_dict("records"))
 
-    # SMT Divergence
+    # SMT & DXY (Sama)
     smt_high_main = d["high"].iloc[-20:].max()
     smt_high_comp = df_smt["high"].iloc[-20:].max()
     smt_low_main = d["low"].iloc[-20:].min()
@@ -69,20 +79,16 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     elif smt_low_main < d["low"].iloc[-40:-20].min() and smt_low_comp > df_smt["low"].iloc[-40:-20].min():
         smt_status = "bullish_divergence"
 
-    # DXY Bias
     dxy_change = df_dxy["close"].pct_change(5).iloc[-1]
     usd_bias = "usd_menguat" if dxy_change > 0.001 else "usd_melemah" if dxy_change < -0.001 else "netral"
 
-    actual_swings = len(swing_hl[swing_hl["HighLow"].notna()]) if swing_hl is not None else 0
     current_price = float(d["close"].iloc[-1])
 
     return {
         "current_price": round(current_price, 2),
-        "data_len": len(d),
-        "swing_len": actual_swings,
         "recent_swings": swings_data,
         "bos_choch": bos_data,
-        "order_blocks_active": ob_data, 
+        "order_blocks_active": ob_data,
         "fvg_active": fvg_data,
         "liquidity_summary": {
             "BSL_above": bsl_levels[:3],
