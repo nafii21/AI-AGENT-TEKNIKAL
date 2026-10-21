@@ -4,10 +4,10 @@ TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 TF_MAP = {"M15": "15min", "H1": "1h", "H4": "4h", "D1": "1day"}
 SYMBOLS = {
     "XAUUSD": "XAU/USD",
-    "NASDAQ": "NDX",       # Nasdaq 100
-    "XAGUSD": "XAG/USD",   # Silver untuk SMT XAU
-    "US500": "SPX",        # S&P 500 untuk SMT NASDAQ
-    "DXY": "DXY"           # Dollar Index
+    "NASDAQ": "NDX",       # Ini juga mungkin kena limit, lihat catatan di bawah
+    "XAGUSD": "XAG/USD",
+    "US500": "SPX",        # Ini juga mungkin kena limit
+    "DXY": "EUR/USD"       # <-- GANTI INI
 }
 
 def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> pd.DataFrame:
