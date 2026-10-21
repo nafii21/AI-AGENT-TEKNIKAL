@@ -87,8 +87,9 @@ function getAssetsKeyboard() {
 function getTimeframeKeyboard(symbol) {
   return {
     inline_keyboard: [
-      [{ text: "M15", callback_data: `tf|${symbol}|M15` }, { text: "H1", callback_data: `tf|${symbol}|H1` }],
-      [{ text: "H4", callback_data: `tf|${symbol}|H4` }, { text: "D1", callback_data: `tf|${symbol}|D1` }]
+      [{ text: "M5", callback_data: `tf|${symbol}|M5` }, { text: "M15", callback_data: `tf|${symbol}|M15` }], // <-- M5 DITAMBAHIN
+      [{ text: "H1", callback_data: `tf|${symbol}|H1` }, { text: "H4", callback_data: `tf|${symbol}|H4` }],
+      [{ text: "D1", callback_data: `tf|${symbol}|D1` }]
     ]
   };
 }
