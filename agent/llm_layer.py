@@ -2,7 +2,9 @@ import json, os
 from openai import OpenAI
 
 client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.environ.get("GROQ_API_KEY", ""))
-GROQ_MODEL = "llama-3.3-70b-versatile"
+
+# Model pengganti resmi dari Groq (llama-3.3-70b-versatile sudah dihentikan)
+GROQ_MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
 Kamu adalah "Sniper Analyst" profesional dengan keahlian ICT (Inner Circle Trader) dan SMT Divergence.
