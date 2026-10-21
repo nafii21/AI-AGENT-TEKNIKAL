@@ -5,7 +5,7 @@ export default {
 
     if (body.message && body.message.text === "/start") {
       await sendTelegram(env.TELEGRAM_BOT_TOKEN, body.message.chat.id, 
-        "🏛️ <b>HERMES Terminal Analyst</b>\n\nSilakan pilih aset:", getAssetsKeyboard());
+        "🏛️ <b>HERMES Institutional Desk</b>\n\nSilakan pilih aset untuk dianalisa (Otomatis MTF H1->M15->M1):", getAssetsKeyboard());
       return new Response("OK");
     }
 
@@ -20,16 +20,12 @@ export default {
       });
 
       if (data[0] === "asset") {
+        const symbol = data[1];
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `Anda memilih <b>${data[1]}</b>. Pilih Timeframe:`, getTimeframeKeyboard(data[1]));
-      } 
-      else if (data[0] === "tf") {
-        const symbol = data[1], tf = data[2];
-        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `⏳ Menghubungi GitHub Actions untuk menganalisa ${symbol} [${tf}]...\nMohon tunggu 1-2 menit.`);
+          `⏳ Menghubungi Institutional Desk untuk menganalisa <b>${symbol}</b>...\n\n<i>Sistem sedang memindai Struktur H1, Setup M15, dan Trigger M1. Mohon tunggu 1-2 menit.</i>`);
         
         try {
-          const ghResponse = await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, tf);
+          const ghResponse = await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol);
           if (!ghResponse.ok) {
              const errText = await ghResponse.text();
              await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `❌ <b>Gagal nembak GitHub:</b>\nStatus: ${ghResponse.status}\nPesan: ${errText}`);
@@ -41,7 +37,7 @@ export default {
       else if (data[0] === "cmd") {
         const cmd = data[1];
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `⏳ Memproses perintah ${cmd}...`);
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, cmd);
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, cmd);
       }
       return new Response("OK");
     }
@@ -57,39 +53,25 @@ async function sendTelegram(token, chatId, text, replyMarkup = null) {
   });
 }
 
-async function triggerGitHub(token, user, repo, symbol, tf, cmd = null, args = null) {
+async function triggerGitHub(token, user, repo, symbol, cmd = null, args = null) {
   const inputs = {};
+  if (symbol) inputs.symbol = symbol;
   if (cmd) inputs.cmd = cmd;
   if (args) inputs.args = JSON.stringify(args);
-  if (symbol) inputs.symbol = symbol;
-  if (tf) inputs.tf = tf;
 
   return await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "User-Agent": "Cloudflare" },
-    body: JSON.stringify({ 
-      ref: "main", 
-      inputs: inputs 
-    })
+    body: JSON.stringify({ ref: "main", inputs: inputs })
   });
 }
 
 function getAssetsKeyboard() {
   return { 
     inline_keyboard: [
-      [{ text: "XAUUSD", callback_data: "asset|XAUUSD" }, { text: "NASDAQ", callback_data: "asset|NASDAQ" }],
+      [{ text: "XAUUSD (Gold)", callback_data: "asset|XAUUSD" }, { text: "NASDAQ", callback_data: "asset|NASDAQ" }],
       [{ text: "GBPUSD", callback_data: "asset|GBPUSD" }, { text: "USDJPY", callback_data: "asset|USDJPY" }],
       [{ text: "📖 Lihat Journal", callback_data: "cmd|journal" }]
     ] 
-  };
-}
-
-function getTimeframeKeyboard(symbol) {
-  return {
-    inline_keyboard: [
-      [{ text: "M5", callback_data: `tf|${symbol}|M5` }, { text: "M15", callback_data: `tf|${symbol}|M15` }], // <-- M5 DITAMBAHIN
-      [{ text: "H1", callback_data: `tf|${symbol}|H1` }, { text: "H4", callback_data: `tf|${symbol}|H4` }],
-      [{ text: "D1", callback_data: `tf|${symbol}|D1` }]
-    ]
   };
 }
