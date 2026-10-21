@@ -32,11 +32,16 @@ export default {
           const ghResponse = await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, tf);
           if (!ghResponse.ok) {
              const errText = await ghResponse.text();
-             await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `❌ <b>Gagal nembak GitHub:</b>\nStatus: ${ghResponse.status}\nPesan: ${errText}\n\nCek Branch/Token di Cloudflare!`);
+             await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `❌ <b>Gagal nembak GitHub:</b>\nStatus: ${ghResponse.status}\nPesan: ${errText}`);
           }
         } catch (err) {
           await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `❌ <b>Error Sistem:</b>\n${err.message}`);
         }
+      }
+      else if (data[0] === "cmd") {
+        const cmd = data[1];
+        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `⏳ Memproses perintah ${cmd}...`);
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, cmd);
       }
       return new Response("OK");
     }
@@ -52,13 +57,19 @@ async function sendTelegram(token, chatId, text, replyMarkup = null) {
   });
 }
 
-async function triggerGitHub(token, user, repo, symbol, tf) {
+async function triggerGitHub(token, user, repo, symbol, tf, cmd = null, args = null) {
+  const inputs = {};
+  if (cmd) inputs.cmd = cmd;
+  if (args) inputs.args = JSON.stringify(args);
+  if (symbol) inputs.symbol = symbol;
+  if (tf) inputs.tf = tf;
+
   return await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "User-Agent": "Cloudflare" },
     body: JSON.stringify({ 
-      ref: "main", // <--- PENTING: Kalau branch utama repo lo namanya "master", ganti teks ini jadi "master"
-      inputs: { symbol: symbol, tf: tf } 
+      ref: "main", 
+      inputs: inputs 
     })
   });
 }
@@ -67,7 +78,8 @@ function getAssetsKeyboard() {
   return { 
     inline_keyboard: [
       [{ text: "XAUUSD", callback_data: "asset|XAUUSD" }, { text: "NASDAQ", callback_data: "asset|NASDAQ" }],
-      [{ text: "GBPUSD", callback_data: "asset|GBPUSD" }, { text: "USDJPY", callback_data: "asset|USDJPY" }]
+      [{ text: "GBPUSD", callback_data: "asset|GBPUSD" }, { text: "USDJPY", callback_data: "asset|USDJPY" }],
+      [{ text: "📖 Lihat Journal", callback_data: "cmd|journal" }]
     ] 
   };
 }
