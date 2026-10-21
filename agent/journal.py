@@ -1,8 +1,9 @@
-import sqlite3, os, json
+import sqlite3, os
 
 DB_FILE = "journal.db"
 
 def init_db():
+    # Jika file journal.db kosong/belum ada, SQLite akan otomatis bikin tabel
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS journal
