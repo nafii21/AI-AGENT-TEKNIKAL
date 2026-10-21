@@ -1,8 +1,9 @@
-import os, httpx, yfinance as yf
+df os, httpx, yfinance as yf
 import pandas as pd
 
 TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 
+# Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
     "NASDAQ": "QQQ",
@@ -10,6 +11,7 @@ TWELVE_SYMBOLS = {
     "USDJPY": "USD/JPY"
 }
 
+# Aset Pembanding (SMT & DXY) pakai yfinance
 YF_SYMBOLS = {
     "DXY": "DX-Y.NYB", 
     "XAG": "SI=F",     
@@ -18,7 +20,13 @@ YF_SYMBOLS = {
     "CHF": "CHF=X"     
 }
 
-TF_MAP_TWELVE = {"M15": "15min", "H1": "1h", "H4": "4h", "D1": "1day"}
+TF_MAP_TWELVE = {
+    "M5": "5min",   # <-- M5 DITAMBAHIN
+    "M15": "15min", 
+    "H1": "1h", 
+    "H4": "4h", 
+    "D1": "1day"
+}
 
 def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> pd.DataFrame:
     symbol = TWELVE_SYMBOLS.get(symbol_key, symbol_key)
@@ -46,7 +54,9 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
 def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
     ticker = YF_SYMBOLS.get(symbol_key, symbol_key)
     
-    if timeframe == "M15":
+    if timeframe == "M5":
+        interval, period = "5m", "5d"   # <-- M5 YFINANCE DITAMBAHIN
+    elif timeframe == "M15":
         interval, period = "15m", "5d"
     elif timeframe in ["H1", "H4"]:
         interval, period = "1h", "3mo"
@@ -68,4 +78,4 @@ def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
         df = df.set_index("timestamps")
         df = df.resample('4h').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'}).dropna().reset_index()
 
-    return df
+    retureturn
