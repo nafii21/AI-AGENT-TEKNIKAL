@@ -13,11 +13,15 @@ def analyze_market(symbol: str, timeframe: str) -> dict:
         df_main = fetch_twelvedata(symbol, timeframe)
         df_dxy = fetch_yfinance("DXY", timeframe)
 
-        # 2. Fetch Data SMT (yfinance)
+        # 2. Fetch Data SMT (yfinance) - Dinamis sesuai pair
         if symbol == "XAUUSD":
             df_smt = fetch_yfinance("XAG", timeframe)
         elif symbol == "NASDAQ":
             df_smt = fetch_yfinance("SPX", timeframe)
+        elif symbol == "GBPUSD":
+            df_smt = fetch_yfinance("EUR", timeframe)   # GBP vs EUR
+        elif symbol == "USDJPY":
+            df_smt = fetch_yfinance("CHF", timeframe)   # USDJPY vs USDCHF
         else:
             df_smt = df_main.copy()
 
