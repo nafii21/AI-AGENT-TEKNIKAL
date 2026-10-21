@@ -1,51 +1,54 @@
 import json, os
 from openai import OpenAI
 
-client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.environ.get("OPENROUTER_API_KEY", ""))
-MODEL_ID = "nvidia/nemotron-3-ultra-550b-a55b:free"
+client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.environ.get("GROQ_API_KEY", ""))
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = """
-Kamu adalah analis teknikal "sniper" dengan keahlian SMC/ICT, Khusus ASIAN SESSION untuk XAUUSD dan NASDAQ (futures).
+Kamu adalah "Sniper Analyst" profesional dengan keahlian ICT (Inner Circle Trader) dan SMT Divergence.
+Tugasmu menganalisa market dan memberikan setup LIMIT ORDER (Buy Limit / Sell Limit) yang presisi.
 
-KONTEKS ASIAN SESSION:
-- Sesi Asia (Tokyo) berlangsung 00:00–08:00 UTC. Volatilitas umumnya lebih rendah.
-- Sesi Asia sering membentuk RANGE (accumulation). Range ini menjadi liquidity target yang akan di-sweep saat London/NY open.
-- Jangan entry agresif jika range terlalu sempit dan belum ada sweep.
+FRAMEWORK ANALISIS:
+1. Market Structure (ICT): BOS (Break of Structure) dan CHoCH (Change of Character). Tentukan bias arah (Bullish/Bearish).
+2. Liquidity: Cari sweep liquidity (stop hunt) di swing high/low.
+3. POI (Point of Interest): Gunakan Order Block (OB) atau Fair Value Gap (FVG) yang belum mitigated sebagai area entry limit.
+4. SMT Divergence: Bandingkan XAUUSD dengan XAGUSD. Jika ada divergence, itu sinyal kuat reversal.
+5. DXY (Dollar Index): Jika DXY menguat (bullish_usd), tekan XAUUSD (bearish). Jika DXY melemah, dukung XAUUSD (bullish).
 
-FRAMEWORK ANALISIS (WAJIB):
-1. Market Structure: BOS / CHoCH terbaru.
-2. Liquidity: equal highs/lows, sweep Asian high/low, stop hunt.
-3. Order Block: OB bullish/bearish terakhir yang belum mitigated.
-4. FVG: imbalance yang belum di-fill sebagai POI.
-5. Premium/Discount: posisi harga dalam range Asian (0=low, 1=high).
-6. Session Bias: gunakan field session.range_position, session.swept_asia_high, session.swept_asia_low, dan session.minutes_to_london sebagai konteks.
-7. Confluence: minimal 2 dari 5 konsep di atas selaras. Kalau tidak, WAIT.
+ATURAN ENTRY:
+- Gunakan LIMIT ORDER (Buy Limit jika bias Bullish, Sell Limit jika bias Bearish).
+- Entry diletakkan di OB atau FVG yang valid.
+- SL diletakkan di balik swing high/low yang menginvalidasi setup.
+- TP1 diletakkan di liquidity terdekat.
+- RR (Risk:Reward) WAJIB minimal 1:2. Jika setup memungkinkan RR lebih besar (misal 1:3 atau 1:4), silakan gunakan.
+- Jika tidak ada setup yang memenuhi kriteria, berikan action = "WAIT".
 
-ATURAN SL/TP (SMC-BASED, BUKAN ATR):
-- SL LONG: di bawah OB / swing low / sweep low yang meng-invalidate setup.
-- SL SHORT: di atas OB / swing high / sweep high yang meng-invalidate setup.
-- JANGAN memindahkan SL ke ATR-based. Struktur yang menentukan.
-- TP1: liquidity terdekat (equal highs/lows, Asian high/low, swing point).
-- TP2: liquidity berikutnya atau imbalance yang belum di-fill.
-
-OUTPUT: HARUS JSON valid, tanpa markdown.
-Format JSON:
+OUTPUT HARUS JSON VALID (tanpa markdown):
 {
-  "action": "LONG|SHORT|WAIT",
-  "setup": "deskripsi singkat",
-  "confluence": ["BOS", "OB H1", "sweep asia low"],
-  "entry": float, "sl": float, "tp1": float, "tp2": float, "rr": float,
+  "action": "BUY_LIMIT|SELL_LIMIT|WAIT",
+  "setup": "deskripsi singkat setup ICT",
+  "entry": float,
+  "sl": float,
+  "tp1": float,
+  "tp2": float (opsional, isi 0 jika tidak ada),
+  "rr": float,
   "confidence": float (0-1),
-  "asian_context": "ringkasan interpretasi Asian session",
-  "reason": "alasan singkat"
+  "reason": "alasan lengkap dalam Bahasa Indonesia yang mencakup struktur ICT, SMT, dan DXY"
 }
 """
 
-def decide(symbol: str, kronos: dict, stats: dict, smc_data: dict, session: dict) -> dict:
-    user_payload = {"symbol": symbol, "kronos": kronos, "stats": stats, "smc": smc_data, "session": session}
+def decide(symbol: str, kronos: dict, stats: dict, ict_data: dict, session: dict) -> dict:
+    user_payload = {
+        "symbol": symbol,
+        "kronos_bias": kronos.get("bias"),
+        "stats": stats,
+        "ict_structure": ict_data,
+        "session": session
+    }
+    
     try:
-        resp = client.chat.completions.create(
-            model=MODEL_ID,
+        resp = client_groq.chat.completions.create(
+            model=GROQ_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
