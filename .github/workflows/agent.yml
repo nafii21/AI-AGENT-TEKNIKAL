@@ -23,11 +23,19 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      # --- TAMBAHAN BARU: Clone Kronos Resmi ---
+      - name: Clone Kronos Official Repo
+        run: |
+          git clone https://github.com/shiyu-coder/Kronos.git /tmp/Kronos
+          cd /tmp/Kronos
+          pip install -r requirements.txt
+
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
       - name: Run Agent Handler
         env:
+          PYTHONPATH: /tmp/Kronos:$PYTHONPATH
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
