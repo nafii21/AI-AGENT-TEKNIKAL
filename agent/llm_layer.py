@@ -3,7 +3,7 @@ from openai import OpenAI
 
 client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.environ.get("GROQ_API_KEY", ""))
 
-# Model pengganti resmi dari Groq (llama-3.3-70b-versatile sudah dihentikan)
+# Model pengganti resmi dari Groq
 GROQ_MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
@@ -15,7 +15,7 @@ FRAMEWORK ANALISIS:
 2. Liquidity: Cari sweep liquidity (stop hunt) di swing high/low.
 3. POI (Point of Interest): Gunakan Order Block (OB) atau FVG yang belum mitigated sebagai area entry.
 4. SMT Divergence: Bandingkan Main Asset dengan SMT Asset. Divergence = sinyal reversal kuat.
-5. USD Bias (EUR/USD): Gunakan field "usd_bias_eurusd". Jika "usd_menguat", tekan XAUUSD (bearish). Jika "usd_melemah", dukung XAUUSD (bullish). (Ingat: EUR/USD berbanding terbalik dengan USD).
+5. USD Bias (DXY): Gunakan field "usd_bias_dxy". Jika "usd_menguat", tekan XAUUSD (bearish). Jika "usd_melemah", dukung XAUUSD (bullish).
 
 ATURAN ENTRY:
 - Gunakan LIMIT ORDER (Buy Limit/Sell Limit) di area OB atau FVG.
