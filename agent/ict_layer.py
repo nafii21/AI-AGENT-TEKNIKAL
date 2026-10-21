@@ -15,14 +15,18 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
         for r in rows:
             rr = {}
             for k, v in r.items():
-                if isinstance(v, pd.Timestamp): rr[k] = v.isoformat()
-                elif v != v: rr[k] = None
-                else: rr[k] = v
+                if isinstance(v, pd.Timestamp): 
+                    rr[k] = v.isoformat()
+                elif pd.isna(v): 
+                    rr[k] = None
+                else: 
+                    rr[k] = v
             out.append(rr)
         return out
 
     def _active(feat, col="MitigatedIndex", n=3):
         if feat is None or feat.empty: return []
+        if col not in feat.columns: return []
         active = feat[feat[col].isna()]
         return _clean(active.tail(n).reset_index().to_dict("records"))
 
@@ -45,8 +49,14 @@ def analyze_ict_structure(df_main: pd.DataFrame, df_smt: pd.DataFrame, df_dxy: p
     # Ekstrak Likuiditas (BSL / SSL)
     liq_data = _clean(liquidity.tail(5).reset_index().to_dict("records") if liquidity is not None and not liquidity.empty else [])
     
-    bsl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") == 1]
-    ssl_levels = [x.get("Level") for x in liq_data if x.get("Liquidity") == -1]
+    bsl_levels = []
+    ssl_levels = []
+    for x in liq_data:
+        liq_val = x.get("Liquidity")
+        if liq_val == 1 or liq_val == "BSL":
+            bsl_levels.append(x.get("Level"))
+        elif liq_val == -1 or liq_val == "SSL":
+            ssl_levels.append(x.get("Level"))
 
     return {
         "bos_choch": _clean(bos_choch.tail(3).reset_index().to_dict("records") if bos_choch is not None and not bos_choch.empty else []),
