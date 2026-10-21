@@ -23,7 +23,6 @@ def send_tg_photo(photo_path, caption):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--symbol")
-    parser.add_argument("--tf")
     parser.add_argument("--cmd")
     parser.add_argument("--args")
     args = parser.parse_args()
@@ -39,13 +38,12 @@ def main():
             send_tg_message(txt)
         return
 
-    if not args.symbol or not args.tf:
-        send_tg_message("❌ Symbol atau Timeframe tidak valid.")
+    if not args.symbol:
+        send_tg_message("❌ Symbol tidak valid.")
         return
 
-    send_tg_message(f"⏳ Menganalisa <b>{args.symbol}</b> [{args.tf}]...\nMohon tunggu sebentar.")
     try:
-        decision = analyze_market(args.symbol, args.tf)
+        decision = analyze_market(args.symbol)
         if "error" in decision:
             send_tg_message(f"❌ Error: {decision['error']}")
             return
@@ -57,24 +55,25 @@ def main():
             text = (
                 f"⚡ <b>[HERMES AGENT // ACTIVE DESK SETUP: {args.symbol}]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"📌 <i>Setup Trade Baru Terdeteksi!</i>\n\n"
-                f"📊 Instrumen: {args.symbol} [{args.tf}]\n"
+                f"📌 <i>Setup Trade Sedang AKTIF & VALID di desk.</i>\n\n"
+                f"📊 Instrumen: {args.symbol} [MTF]\n"
                 f"🎯 Rekomendasi: <b>{emoji} {action}</b>\n"
                 f"🏆 Grade: <b>{decision.get('grade', '-')}</b> | Keyakinan: <b>{decision.get('confidence', 0)}/10</b>\n"
                 f"📉 Bias: <b>{decision.get('bias', '-')}</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"🎯 Zona Entry: <b>{decision.get('entry_zone_min', '-')} - {decision.get('entry_zone_max', '-')}</b>\n"
+                f"🎯 POI Dipantau: <b>{decision.get('entry_zone_min', '-')} - {decision.get('entry_zone_max', '-')}</b>\n"
                 f"🛑 SL: <code>{decision.get('sl', '-')}</code>\n"
                 f"💎 TP1: <code>{decision.get('tp1', '-')}</code> (RR {decision.get('rr_tp1', '-')})\n"
                 f"💎 TP2: <code>{decision.get('tp2', '-')}</code> (RR {decision.get('rr_tp2', '-')})\n"
+                f"⏳ Status Live: <b>PENDING POI (STANDBY ENTRY)</b>\n"
+                f"💰 Harga Saat Ini: {decision.get('current_price', '-')}\n"
+                f"⏱️ Sisa Validitas Setup: ~{decision.get('validity_mins', 45)} Menit\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"🧠 <b>Konteks H1:</b>\n<i>{decision.get('reason_h1', '-')}</i>\n\n"
-                f"📊 <b>Konteks {args.tf}:</b>\n<i>{decision.get('reason_m15', '-')}</i>\n\n"
-                f"💥 <b>Trigger Entry:</b>\n<i>{decision.get('trigger_m1', '-')}</i>\n"
+                f"📊 <b>Konteks M15:</b>\n<i>{decision.get('reason_m15', '-')}</i>\n\n"
+                f"💥 <b>Pemicu Entri (Trigger M1):</b>\n<i>{decision.get('trigger_m1', '-')}</i>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"⚠️ <b>Invalidasi:</b> {decision.get('invalidation', '-')}\n"
-                f"⏱️ <b>Validitas Setup:</b> ~{decision.get('validity_mins', 45)} Menit\n"
-                f"💰 <b>Harga Saat Ini:</b> {decision.get('current_price', '-')}\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"{decision.get('tracker_msg', '')}\n"
                 f"<i>⚠️ Bukan financial advice. Risk max 1%.</i>"
@@ -83,7 +82,7 @@ def main():
             text = (
                 f"⚪ <b>[HERMES AGENT // NO SETUP]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"📊 Instrumen: <b>{args.symbol}</b> [{args.tf}]\n"
+                f"📊 Instrumen: <b>{args.symbol}</b> [MTF]\n"
                 f"⚡ Status: <b>WAIT / NO TRADE</b>\n"
                 f"🏆 Grade: {decision.get('grade', '-')} | Keyakinan: {decision.get('confidence', 0)}/10\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
@@ -94,7 +93,8 @@ def main():
 
         df_ohlcv = pd.DataFrame(decision.get("df_ohlcv", []))
         if not df_ohlcv.empty and action != "WAIT":
-            chart_file = generate_chart(df_ohlcv, decision, args.symbol, args.tf)
+            # Generate chart menggunakan data M15
+            chart_file = generate_chart(df_ohlcv, decision, args.symbol, "M15")
             if chart_file and os.path.exists(chart_file):
                 send_tg_photo(chart_file, text)
             else:
