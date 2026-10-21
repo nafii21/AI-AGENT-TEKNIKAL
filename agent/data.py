@@ -6,7 +6,7 @@ TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
 # Aset Utama pakai Twelve Data
 TWELVE_SYMBOLS = {
     "XAUUSD": "XAU/USD",
-    "NASDAQ": "QQQ"  # QQQ aman di free tier
+    "NASDAQ": "QQQ" 
 }
 
 # Aset Pembanding (SMT & DXY) pakai yfinance
@@ -44,7 +44,6 @@ def fetch_twelvedata(symbol_key: str, timeframe: str, outputsize: int = 500) -> 
 def fetch_yfinance(symbol_key: str, timeframe: str) -> pd.DataFrame:
     ticker = YF_SYMBOLS.get(symbol_key, symbol_key)
     
-    # Atur period & interval yfinance
     if timeframe == "M15":
         interval, period = "15m", "5d"
     elif timeframe in ["H1", "H4"]:
