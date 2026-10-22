@@ -2,7 +2,7 @@ import os, argparse, httpx, json, pandas as pd
 from agent.data import fetch_data
 from agent.llm_layer import analyze
 from agent.charting import generate_chart
-from agent.journal import get_journals, add_journal 
+from agent.journal import get_journals, add_journal, get_monthly_stats # Import fungsi baru
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -23,15 +23,25 @@ def main():
     parser.add_argument("--cmd")
     args = parser.parse_args()
 
-    # --- FITUR LIHAT JOURNAL (FIXED UNTUK JSON) ---
+    # --- FITUR LIHAT JOURNAL & STATISTIK ---
     if args.cmd == "journal":
         rows = get_journals()
+        
+        # Ambil statistik bulan ini
+        stats = get_monthly_stats()
+        
         if not rows:
             send_tg("📖 Belum ada catatan journal.")
         else:
-            txt = "📖 <b>5 Catatan Journal Terakhir:</b>\n"
+            txt = (
+                f"📊 <b>PERFORMA BULAN {stats['month'].upper()}</b>\n"
+                f"✅ TP Hit: <b>{stats['tp']}</b> kali\n"
+                f"❌ SL Hit: <b>{stats['sl']}</b> kali\n"
+                f"🎯 Winrate: <b>{stats['winrate']}%</b> (dari {stats['total']} trade)\n"
+                f"━━━━━━━━━━━━━━━━━━\n"
+                f"📖 <b>5 Catatan Journal Terakhir:</b>\n"
+            )
             for r in rows:
-                # Kita ubah dari r[0] jadi r.get('timestamp') dll
                 txt += (
                     f"\n📅 {r.get('timestamp', '-')}\n"
                     f"💱 {r.get('symbol', '-')} | {r.get('action', '-')}\n"
@@ -47,24 +57,19 @@ def main():
         return
 
     try:
-        # 1. Ambil Data
         df = fetch_data(args.symbol, args.tf)
         current_price = float(df["close"].iloc[-1])
         
-        # 2. Analisa AI (OpenRouter)
         decision = analyze(df)
-        
         action = decision.get("action", "WAIT")
         emoji = "🟢" if action == "BUY_LIMIT" else "🔴" if action == "SELL_LIMIT" else "⚪"
         
-        # 3. Format Pesan
         if action != "WAIT":
             entry = decision.get('entry_price', 0)
             sl = decision.get('sl', 0)
             tp = decision.get('tp', 0)
             reason = decision.get('reason', '-')
             
-            # --- AUTO SAVE KE JOURNAL (JSON) ---
             add_journal(
                 symbol=args.symbol,
                 action=action,
@@ -74,7 +79,6 @@ def main():
                 result="PENDING",
                 notes=reason
             )
-            # -----------------------------------
             
             text = (
                 f"⚡ <b>[HERMES UNIVERSAL SNIPER]</b>\n"
@@ -99,7 +103,6 @@ def main():
                 f"💡 <b>Reason:</b>\n{decision.get('reason', '-')}\n"
             )
 
-        # 4. Bikin Chart & Kirim
         if action != "WAIT":
             chart = generate_chart(df, decision, args.symbol, args.tf)
             if chart and os.path.exists(chart): send_photo(chart, text)
