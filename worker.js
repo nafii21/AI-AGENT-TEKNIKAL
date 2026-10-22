@@ -19,25 +19,34 @@ export default {
         body: JSON.stringify({ callback_query_id: cb.id, text: "Memproses..." })
       });
 
+      // 1. Menu Analisa -> Munculin Pilihan Pair
       if (data[0] === "menu" && data[1] === "analisa") {
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          "Pilih <b>Timeframe Bias</b> (Arah Utama):", getBiasKeyboard());
+          "Pilih <b>Pair</b> yang ingin dianalisa:", getPairsKeyboard());
       }
+      // 2. Pilih Pair -> Munculin Pilihan Bias
+      else if (data[0] === "pair") {
+        const symbol = data[1];
+        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
+          `Anda memilih <b>${symbol}</b>.\nPilih <b>Timeframe Bias</b>:`, getBiasKeyboard(symbol));
+      }
+      // 3. Pilih Bias -> Tembak GitHub
       else if (data[0] === "bias") {
-        const biasTF = data[1]; 
+        const symbol = data[1];
+        const biasTF = data[2]; 
         let setupTF = "";
         if (biasTF === "H4") setupTF = "M15";
         if (biasTF === "H1") setupTF = "M5";
         if (biasTF === "M15") setupTF = "M1";
 
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `⏳ Menganalisa Bias <b>${biasTF}</b> dan Sniper Setup <b>${setupTF}</b>...\nMohon tunggu.`);
+          `⏳ Menganalisa <b>${symbol}</b> | Bias: <b>${biasTF}</b> | Setup: <b>${setupTF}</b>...\nMohon tunggu.`);
         
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, biasTF, setupTF);
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, biasTF, setupTF);
       }
       else if (data[0] === "menu" && data[1] === "journal") {
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "⏳ Membuka Journal...");
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "journal");
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, null, "journal");
       }
       return new Response("OK");
     }
@@ -53,8 +62,9 @@ async function sendTelegram(token, chatId, text, replyMarkup = null) {
   });
 }
 
-async function triggerGitHub(token, user, repo, bias_tf, setup_tf, cmd = null) {
+async function triggerGitHub(token, user, repo, symbol, bias_tf, setup_tf, cmd = null) {
   const inputs = {};
+  if (symbol) inputs.symbol = symbol;
   if (bias_tf) inputs.bias_tf = bias_tf;
   if (setup_tf) inputs.setup_tf = setup_tf;
   if (cmd) inputs.cmd = cmd;
@@ -72,10 +82,17 @@ function getMainMenu() {
   ]};
 }
 
-function getBiasKeyboard() {
+function getPairsKeyboard() {
   return { inline_keyboard: [
-    [{ text: "Bias H4 (Setup M15)", callback_data: "bias|H4" }],
-    [{ text: "Bias H1 (Setup M5)", callback_data: "bias|H1" }],
-    [{ text: "Bias M15 (Setup M1)", callback_data: "bias|M15" }]
+    [{ text: "XAUUSD", callback_data: "pair|XAUUSD" }, { text: "GBPUSD", callback_data: "pair|GBPUSD" }],
+    [{ text: "USDJPY", callback_data: "pair|USDJPY" }, { text: "BTCUSD", callback_data: "pair|BTCUSD" }]
+  ]};
+}
+
+function getBiasKeyboard(symbol) {
+  return { inline_keyboard: [
+    [{ text: "Bias H4 (Setup M15)", callback_data: `bias|${symbol}|H4` }],
+    [{ text: "Bias H1 (Setup M5)", callback_data: `bias|${symbol}|H1` }],
+    [{ text: "Bias M15 (Setup M1)", callback_data: `bias|${symbol}|M15` }]
   ]};
 }
