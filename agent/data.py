@@ -16,11 +16,19 @@ def fetch_twelvedata(symbol: str, timeframe: str, outputsize: int = 300) -> pd.D
     
     df = pd.DataFrame(resp["values"]).rename(columns={"datetime": "timestamps"})
     
+    # Bersihin kolom harga (Open, High, Low, Close)
     for col in ["open", "high", "low", "close"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
     
     df = df.dropna(subset=["open", "high", "low", "close"])
-    df["volume"] = pd.to_numeric(df.get("volume", 1), errors="coerce").fillna(1).replace(0, 1)
+    
+    # --- INI BAGIAN YANG DIBENERIN ---
+    # Cek apakah kolom volume ada. Kalau nggak ada, bikin kolom baru isinya 1 semua.
+    if "volume" in df.columns:
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(1).replace(0, 1)
+    else:
+        df["volume"] = 1
+    # ---------------------------------
     
     df["timestamps"] = pd.to_datetime(df["timestamps"])
     return df.sort_values("timestamps").reset_index(drop=True)
