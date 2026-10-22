@@ -31,20 +31,18 @@ def add_journal(symbol, action, entry, sl, tp, result, notes):
     save_journal(data)
 
 def update_statuses():
-    """Fungsi buat ngecek harga terbaru dan nge-update TP/SL"""
     data = load_journal()
     updated = False
     for entry in data:
-        if entry['result'] == 'PENDING':
-            symbol = entry['symbol']
+        if entry.get('result') == 'PENDING':
+            symbol = entry.get('symbol')
             try:
-                # Ambil harga terbaru pakai TF M5
                 df = fetch_data(symbol, "M5")
                 current_price = float(df["close"].iloc[-1])
                 
-                action = entry['action']
-                tp = float(entry['tp'])
-                sl = float(entry['sl'])
+                action = entry.get('action')
+                tp = float(entry.get('tp', 0))
+                sl = float(entry.get('sl', 0))
                 
                 if action == "BUY_LIMIT":
                     if current_price >= tp:
@@ -60,14 +58,44 @@ def update_statuses():
                     elif current_price >= sl:
                         entry['result'] = '❌ SL HIT'
                         updated = True
-            except Exception as e:
-                pass # Skip kalau data gagal diambil
+            except Exception:
+                pass 
                 
     if updated:
         save_journal(data)
 
+def get_monthly_stats():
+    """Fungsi buat ngitung TP, SL, dan Winrate bulan ini"""
+    data = load_journal()
+    now = datetime.utcnow()
+    current_month = now.strftime("%Y-%m") # Format: 2026-10
+    
+    tp_count = 0
+    sl_count = 0
+    total_closed = 0
+    
+    for entry in data:
+        ts = entry.get("timestamp", "")
+        if ts.startswith(current_month):
+            res = entry.get("result", "")
+            if "TP HIT" in res:
+                tp_count += 1
+                total_closed += 1
+            elif "SL HIT" in res:
+                sl_count += 1
+                total_closed += 1
+                
+    winrate = (tp_count / total_closed * 100) if total_closed > 0 else 0
+    
+    return {
+        "month": now.strftime("%B %Y"),
+        "tp": tp_count,
+        "sl": sl_count,
+        "total": total_closed,
+        "winrate": round(winrate, 1)
+    }
+
 def get_journals(limit=5):
-    # Update status dulu sebelum ditampilin
     update_statuses() 
     data = load_journal()
     return data[:limit]
