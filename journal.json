@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-22 20:03:41",
+    "symbol": "XAUUSD",
+    "action": "BUY_LIMIT",
+    "entry": 4026.5,
+    "sl": 4018.91,
+    "tp": 4043.5,
+    "result": "PENDING",
+    "notes": "Strategi: ICT SMC Reversal (Liquidity Sweep / Spring) di Area Low Sesional. Harga melakukan Sweep Likuiditas di Low 4020.91 (Candle 19:45) lalu menutup kuat di atasnya (Bullish Rejection), menandakan Stop Hunt. Terbentuk Market Structure Shift (MSS) di TF 15m dengan Higher Low (4026.44 > 4020.91) dan Higher High (4028.70 > 4027.73). Entry Limit di 4026.50 (50% Candle Bullish 19:45 / Open 20:00) untuk entry presisi di zona Discount/Fair Value. SL diletakkan di 4018.91 (di bawah Sweep Low 4020.91 + Buffer 20 poin) untuk menghindari noise/volatilitas spread. Target TP 4043.50 mengacu pada Mitigasi Bearish Order Block (OB) asal gerakan turun besar (Candle 17:45 Low 4043.47) yang berkonfluensi dengan Swing High lokal 18:00/18:15, memberikan RR 1:2.24."
+  },
+  {
     "timestamp": "2026-10-22 18:57:09",
     "symbol": "BTCUSD",
     "action": "SELL_LIMIT",
