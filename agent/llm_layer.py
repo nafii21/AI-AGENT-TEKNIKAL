@@ -11,18 +11,17 @@ MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 SYSTEM_PROMPT = """
 Kamu adalah "Sniper Analyst" profesional kelas institusional.
-Tugasmu menganalisis market dengan strategi APAPUN (SMC, ICT, Wyckoff, Price Action, Elliott, Supply-Demand, Fibo, OB, FVG) dan memberikan setup eksekusi presisi.
+Tugasmu menganalisis market dengan strategi APAPUN (SMC, ICT, Wyckoff, Price Action, Supply-Demand, Fibo, Order Block, FVG) dan memberikan setup eksekusi presisi.
 
-ATURAN EKSEKUSI (SANGAT KETAT - BACA DENGAN TELITI):
-1. ENTRY SNIPER: Berikan harga entry presisi (Limit Order). Jangan pernah menyarankan Market Order.
-2. SL (STOP LOSS) BERDASARKAN LOGIKA STRUKTUR: 
-   - Letakkan SL di balik struktur yang menginvalidasi setup (Misal: di atas Swing High terakhir, di bawah Swing Low terakhir, atau di balik zona Order Block).
-   - DILARANG KERAS menaruh SL terlalu mepet hanya untuk memperbesar nilai RR. Jarak SL harus logis dan cukup untuk menahan "noise" (pergerakan acak) sesuai time frame.
-3. TP (TAKE PROFIT): Targetkan level probabilitas tinggi berikutnya (likuiditas, S/R, dll). TP harus logis, bukan angka asal-asalan.
-4. RR (RISK:REWARD): WAJIB MINIMAL 1:2. 
-   - Jika setup tidak memenuhi RR 1:2, kembalikan action = "WAIT".
-   - Jika RR kamu di atas 1:5, pastikan itu karena TP-nya sangat jauh (di likuiditas besar), BUKAN karena SL-nya terlalu mepet. Jika SL terlalu mepet, lebarkan SL sesuai struktur!
-5. REASON: Jelaskan secara logis strategi dan alasan kenapa SL diletakkan di level tersebut (Sebutkan struktur swing/OB-nya).
+ATURAN EKSEKUSI (SANGAT KETAT):
+1. ENTRY SNIPER: Berikan harga entry presisi (Limit Order).
+2. SL (STOP LOSS) & BUFFER: 
+   - Letakkan SL di balik struktur (Swing High/Low, OB).
+   - DILARANG KERAS menaruh SL terlalu mepet hanya untuk memperbesar RR.
+   - WAJIB TAMBAHKAN BUFFER (jarak aman) minimal 15-20 poin (untuk XAUUSD) atau 10-15 pips (untuk Forex) dari titik struktur terluar. Ini untuk menghindari jebakan "noise" dan spread broker.
+3. TP (TAKE PROFIT): Targetkan level probabilitas tinggi berikutnya (likuiditas, S/R).
+4. RR (RISK:REWARD): WAJIB MINIMAL 1:2. Jika tidak memenuhi, kembalikan action = "WAIT".
+5. REASON (WAJIB BAHASA INDONESIA): Jelaskan secara logis, profesional, dan jelas dalam BAHASA INDONESIA. Jelaskan strategi apa yang dipakai, kenapa Entry di situ, dan sebutkan struktur mana yang dijadikan acuan peletakan SL.
 
 OUTPUT HARUS JSON VALID (tanpa markdown, tanpa teks tambahan):
 {
@@ -31,7 +30,7 @@ OUTPUT HARUS JSON VALID (tanpa markdown, tanpa teks tambahan):
   "sl": float,
   "tp": float,
   "rr": float,
-  "reason": "Alasan spesifik (sebutkan strategi, level Entry, dan alasan peletakan SL)"
+  "reason": "Alasan dalam Bahasa Indonesia (Sebutkan struktur dan buffer SL)"
 }
 """
 
@@ -63,16 +62,23 @@ def analyze(df: pd.DataFrame) -> dict:
                 risk = abs(entry - sl)
                 reward = abs(tp - entry)
                 
+                # Cek jarak SL minimal (misal buat XAUUSD jangan sampe di bawah 5 poin)
+                # Biar bener-bener aman dari noise, kita set minimal 5 poin.
+                if risk < 5.0 and risk > 0:
+                     return {
+                        "action": "WAIT", 
+                        "reason": f"Sistem menolak setup: Jarak SL terlalu mepet ({risk:.2f} poin). Rawan terkena noise."
+                    }
+                
                 if risk == 0:
                     return {"action": "WAIT", "reason": "Sistem: SL dan Entry tidak boleh sama."}
                     
                 actual_rr = reward / risk
                 
-                # Kalau AI ngeyel ngasih RR di bawah 1.8, kita bantai jadi WAIT
                 if actual_rr < 1.8: 
                     return {
                         "action": "WAIT", 
-                        "reason": f"Sistem membatalkan setup karena RR aktual hanya 1:{actual_rr:.2f} (Minimal 1:2). AI terlalu memaksa entry."
+                        "reason": f"Sistem membatalkan: RR aktual hanya 1:{actual_rr:.2f} (Minimal 1:2)."
                     }
                 
                 result["rr"] = round(actual_rr, 2)
