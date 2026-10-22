@@ -1,4 +1,5 @@
 import os, argparse, httpx, json, pandas as pd
+from datetime import datetime, timedelta
 from agent.data import fetch_data
 from agent.llm_layer import analyze
 from agent.charting import generate_chart
@@ -16,6 +17,15 @@ def send_photo(path, caption):
         with open(path, "rb") as f:
             httpx.post(f"https://api.telegram.org/bot{TOKEN}/sendPhoto", data={"chat_id": CHAT_ID, "caption": caption, "parse_mode": "HTML"}, files={"photo": f}, timeout=30)
 
+def to_wib(utc_str):
+    """Fungsi buat ngubah jam UTC ke WIB (UTC+7)"""
+    try:
+        dt_utc = datetime.strptime(utc_str, "%Y-%m-%d %H:%M:%S")
+        dt_wib = dt_utc + timedelta(hours=7)
+        return dt_wib.strftime("%Y-%m-%d %H:%M WIB")
+    except:
+        return utc_str
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--symbol")
@@ -32,7 +42,14 @@ def main():
         else:
             txt = f"📊 <b>PERFORMA BULAN {stats['month'].upper()}</b>\n✅ TP: <b>{stats['tp']}</b> | ❌ SL: <b>{stats['sl']}</b>\n🎯 Winrate: <b>{stats['winrate']}%</b>\n━━━━━━━━━━━━━━━━━━\n📖 <b>5 Catatan Terakhir:</b>\n"
             for r in rows:
-                txt += f"\n📅 {r.get('timestamp', '-')}\n💱 {r.get('symbol', '-')} | {r.get('action', '-')}\n📍 Entry: {r.get('entry', '-')} | SL: {r.get('sl', '-')} | TP: {r.get('tp', '-')}\n🏆 Status: <b>{r.get('result', '-')}</b>\n📝 {r.get('notes', '-')[:100]}...\n"
+                wib_time = to_wib(r.get('timestamp', '-'))
+                txt += (
+                    f"\n📅 {wib_time}\n"
+                    f"💱 {r.get('symbol', '-')} | {r.get('action', '-')}\n"
+                    f"📍 Entry: {r.get('entry', '-')} | SL: {r.get('sl', '-')} | TP: {r.get('tp', '-')}\n"
+                    f"🏆 Status: <b>{r.get('result', '-')}</b>\n"
+                    f"📝 {r.get('notes', '-')[:100]}...\n"
+                )
             send_tg(txt)
         return
 
@@ -41,7 +58,7 @@ def main():
         targets = [("XAUUSD", "M15"), ("NASDAQ", "M15")]
         for symbol, tf in targets:
             if has_active_setup(symbol):
-                print(f"[{symbol}] Setup masih PENDING. Skip cari sinyal baru.")
+                print(f"[{symbol}] Setup masih PENDING. Skip.")
                 continue
             
             try:
@@ -49,7 +66,6 @@ def main():
                 decision = analyze(df)
                 action = decision.get("action", "WAIT")
                 
-                # KALO ADA SINYAL, KIRIM. KALO WAIT, DIEM AJA.
                 if action in ("BUY_LIMIT", "SELL_LIMIT"):
                     entry, sl, tp = decision.get('entry_price', 0), decision.get('sl', 0), decision.get('tp', 0)
                     reason = decision.get('reason', '-')
@@ -69,13 +85,12 @@ def main():
                         f"📊 RR: <b>{decision.get('rr', '-')}</b>\n"
                         f"━━━━━━━━━━━━━━━━━━\n"
                         f"💡 <b>Reason:</b>\n{reason}\n"
-                        f"📝 <i>(Auto-Scan Journal)</i>"
                     )
                     chart = generate_chart(df, decision, symbol, tf)
                     if chart and os.path.exists(chart): send_photo(chart, text)
                     else: send_tg(text)
                 else:
-                    print(f"[{symbol}] Tidak ada setup (WAIT). Notifikasi tidak dikirim.")
+                    print(f"[{symbol}] WAIT. Notifikasi tidak dikirim.")
             except Exception as e:
                 print(f"[{symbol}] Error: {str(e)}")
         return
