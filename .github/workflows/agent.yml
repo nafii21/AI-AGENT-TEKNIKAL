@@ -3,8 +3,9 @@ name: Hermes MSNR Sniper
 on:
   workflow_dispatch:
     inputs:
-      bias_tf: { description: 'Bias Timeframe', required: false }
-      setup_tf: { description: 'Setup Timeframe', required: false }
+      symbol: { description: 'Pair', required: false }
+      bias_tf: { description: 'Bias TF', required: false }
+      setup_tf: { description: 'Setup TF', required: false }
       cmd: { description: 'Command', required: false }
 
 jobs:
@@ -33,7 +34,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python handler.py --bias_tf "${{ github.event.inputs.bias_tf }}" --setup_tf "${{ github.event.inputs.setup_tf }}" --cmd "${{ github.event.inputs.cmd }}"
+          python handler.py --symbol "${{ github.event.inputs.symbol }}" --bias_tf "${{ github.event.inputs.bias_tf }}" --setup_tf "${{ github.event.inputs.setup_tf }}" --cmd "${{ github.event.inputs.cmd }}"
 
       - name: Commit Updates
         run: |
