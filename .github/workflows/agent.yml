@@ -1,4 +1,4 @@
-name: Hermes PA Sniper
+name: Hermes MSNR Sniper
 
 on:
   workflow_dispatch:
@@ -35,10 +35,10 @@ jobs:
         run: |
           python handler.py --bias_tf "${{ github.event.inputs.bias_tf }}" --setup_tf "${{ github.event.inputs.setup_tf }}" --cmd "${{ github.event.inputs.cmd }}"
 
-      - name: Commit Journal & Setup Updates
+      - name: Commit Updates
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "GitHub Actions Bot"
           git add active_setups.json journal.db || true
-          git commit -m "Update auto-journal & setup tracker [skip ci]" || echo "Tidak ada perubahan"
+          git commit -m "Update auto-journal [skip ci]" || echo "Tidak ada perubahan"
           git push || true
