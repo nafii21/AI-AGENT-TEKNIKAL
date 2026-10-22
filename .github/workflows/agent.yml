@@ -30,14 +30,15 @@ jobs:
 
       - name: Run Agent
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # --- PASTIKAN SECRET INI UDAH DIISI DI GITHUB ---
+          XKIRO_API_KEY: ${{ secrets.XKIRO_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: |
           python handler.py --symbol "${{ github.event.inputs.symbol }}" --tf "${{ github.event.inputs.tf }}" --cmd "${{ github.event.inputs.cmd }}"
 
-      # --- BAGIAN INI YANG DIUPDATE ---
+      # --- BAGIAN INI BUAT NYIMPEN JOURNAL OTOMATIS ---
       - name: Commit Updates
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
