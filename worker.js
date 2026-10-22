@@ -5,7 +5,7 @@ export default {
 
     if (body.message && body.message.text === "/start") {
       await sendTelegram(env.TELEGRAM_BOT_TOKEN, body.message.chat.id, 
-        "🏛️ <b>HERMES MSNR Sniper</b>\n\nSilakan pilih menu:", getMainMenu());
+        "🏛️ <b>HERMES Universal Bot</b>\n\nSilakan pilih menu:", getMainMenu());
       return new Response("OK");
     }
 
@@ -19,34 +19,24 @@ export default {
         body: JSON.stringify({ callback_query_id: cb.id, text: "Memproses..." })
       });
 
-      // 1. Menu Analisa -> Munculin Pilihan Pair
       if (data[0] === "menu" && data[1] === "analisa") {
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          "Pilih <b>Pair</b> yang ingin dianalisa:", getPairsKeyboard());
+          "Pilih <b>Pair</b> yang ingin dianalisa:", getAssetsKeyboard());
       }
-      // 2. Pilih Pair -> Munculin Pilihan Bias
-      else if (data[0] === "pair") {
+      else if (data[0] === "asset") {
         const symbol = data[1];
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `Anda memilih <b>${symbol}</b>.\nPilih <b>Timeframe Bias</b>:`, getBiasKeyboard(symbol));
-      }
-      // 3. Pilih Bias -> Tembak GitHub
-      else if (data[0] === "bias") {
-        const symbol = data[1];
-        const biasTF = data[2]; 
-        let setupTF = "";
-        if (biasTF === "H4") setupTF = "M15";
-        if (biasTF === "H1") setupTF = "M5";
-        if (biasTF === "M15") setupTF = "M1";
-
+          `Anda memilih <b>${symbol}</b>.\nPilih <b>Timeframe</b>:`, getTFKeyboard(symbol));
+      } 
+      else if (data[0] === "tf") {
+        const symbol = data[1], tf = data[2];
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `⏳ Menganalisa <b>${symbol}</b> | Bias: <b>${biasTF}</b> | Setup: <b>${setupTF}</b>...\nMohon tunggu.`);
-        
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, biasTF, setupTF);
+          `⏳ Menganalisa <b>${symbol}</b> [${tf}]...\nMohon tunggu.`);
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, tf);
       }
       else if (data[0] === "menu" && data[1] === "journal") {
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "⏳ Membuka Journal...");
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, null, "journal");
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "journal");
       }
       return new Response("OK");
     }
@@ -62,11 +52,10 @@ async function sendTelegram(token, chatId, text, replyMarkup = null) {
   });
 }
 
-async function triggerGitHub(token, user, repo, symbol, bias_tf, setup_tf, cmd = null) {
+async function triggerGitHub(token, user, repo, symbol, tf, cmd = null) {
   const inputs = {};
   if (symbol) inputs.symbol = symbol;
-  if (bias_tf) inputs.bias_tf = bias_tf;
-  if (setup_tf) inputs.setup_tf = setup_tf;
+  if (tf) inputs.tf = tf;
   if (cmd) inputs.cmd = cmd;
 
   return await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
@@ -82,17 +71,17 @@ function getMainMenu() {
   ]};
 }
 
-function getPairsKeyboard() {
+function getAssetsKeyboard() {
   return { inline_keyboard: [
-    [{ text: "XAUUSD", callback_data: "pair|XAUUSD" }, { text: "GBPUSD", callback_data: "pair|GBPUSD" }],
-    [{ text: "USDJPY", callback_data: "pair|USDJPY" }, { text: "BTCUSD", callback_data: "pair|BTCUSD" }]
+    [{ text: "XAUUSD", callback_data: "asset|XAUUSD" }, { text: "NASDAQ", callback_data: "asset|NASDAQ" }],
+    [{ text: "GBPUSD", callback_data: "asset|GBPUSD" }, { text: "BTCUSD", callback_data: "asset|BTCUSD" }]
   ]};
 }
 
-function getBiasKeyboard(symbol) {
+function getTFKeyboard(symbol) {
   return { inline_keyboard: [
-    [{ text: "Bias H4 (Setup M15)", callback_data: `bias|${symbol}|H4` }],
-    [{ text: "Bias H1 (Setup M5)", callback_data: `bias|${symbol}|H1` }],
-    [{ text: "Bias M15 (Setup M1)", callback_data: `bias|${symbol}|M15` }]
+    [{ text: "M5", callback_data: `tf|${symbol}|M5` }, { text: "M15", callback_data: `tf|${symbol}|M15` }],
+    [{ text: "H1", callback_data: `tf|${symbol}|H1` }, { text: "H4", callback_data: `tf|${symbol}|H4` }],
+    [{ text: "D1", callback_data: `tf|${symbol}|D1` }]
   ]};
 }
