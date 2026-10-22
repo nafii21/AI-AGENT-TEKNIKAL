@@ -5,7 +5,7 @@ export default {
 
     if (body.message && body.message.text === "/start") {
       await sendTelegram(env.TELEGRAM_BOT_TOKEN, body.message.chat.id, 
-        "🏛️ <b>HERMES Pro Desk</b>\n\nSilakan pilih menu:", getMainMenu());
+        "🏛️ <b>HERMES MSNR Sniper</b>\n\nSilakan pilih menu:", getMainMenu());
       return new Response("OK");
     }
 
@@ -31,16 +31,14 @@ export default {
         if (biasTF === "M15") setupTF = "M1";
 
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `⏳ Menganalisa Bias <b>${biasTF}</b> dan Setup Sniper <b>${setupTF}</b>...\nMohon tunggu 1-2 menit.`);
+          `⏳ Menganalisa Bias <b>${biasTF}</b> dan Sniper Setup <b>${setupTF}</b>...\nMohon tunggu.`);
         
-        // Kirim Bias & Setup TF ke GitHub Actions
         await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, biasTF, setupTF);
       }
       else if (data[0] === "menu" && data[1] === "journal") {
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "⏳ Membuka Journal...");
         await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "journal");
       }
-
       return new Response("OK");
     }
     return new Response("OK");
