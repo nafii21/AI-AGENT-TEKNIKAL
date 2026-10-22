@@ -1,58 +1,46 @@
 export default {
   async fetch(request, env, ctx) {
+    // ... (biarin kode fetch yang lama buat handle Telegram manual)
     if (request.method !== "POST") return new Response("OK");
     const body = await request.json();
 
-    // 1. Handle command /start
     if (body.message && body.message.text === "/start") {
       await sendTelegram(env.TELEGRAM_BOT_TOKEN, body.message.chat.id, 
         "🏛️ <b>HERMES Universal Bot</b>\n\nSilakan pilih menu:", getMainMenu());
       return new Response("OK");
     }
 
-    // 2. Handle Tombol (Callback Query)
     if (body.callback_query) {
+      // ... (biarin kode callback_query yang lama)
       const cb = body.callback_query;
       const data = cb.data.split("|");
       const chatId = cb.message.chat.id;
-
-      // Jawab callback biar loading di Telegram ilang
       await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callback_query_id: cb.id, text: "Memproses..." })
       });
-
-      // Menu 1: Analisa Market
       if (data[0] === "menu" && data[1] === "analisa") {
-        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          "Silakan pilih <b>Pair</b> yang ingin dianalisa:", getAssetsKeyboard());
-      }
-      // Menu 2: Journal
-      else if (data[0] === "menu" && data[1] === "journal") {
+        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "Silakan pilih <b>Pair</b>:", getAssetsKeyboard());
+      } else if (data[0] === "menu" && data[1] === "journal") {
         await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, "⏳ Membuka Journal...");
         await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "journal");
+      } else if (data[0] === "asset") {
+        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `Anda memilih <b>${data[1]}</b>.\nPilih TF:`, getTFKeyboard(data[1]));
+      } else if (data[0] === "tf") {
+        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, `⏳ Menganalisa <b>${data[1]}</b> [${data[2]}]...`);
+        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, data[1], data[2], null);
       }
-      // Pilih Pair -> Munculin Pilihan Timeframe
-      else if (data[0] === "asset") {
-        const symbol = data[1];
-        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `Anda memilih <b>${symbol}</b>.\nPilih <b>Timeframe</b>:`, getTFKeyboard(symbol));
-      } 
-      // Pilih TF -> Tembak GitHub Actions
-      else if (data[0] === "tf") {
-        const symbol = data[1], tf = data[2];
-        await sendTelegram(env.TELEGRAM_BOT_TOKEN, chatId, 
-          `⏳ Menganalisa <b>${symbol}</b> [${tf}]...\nMohon tunggu 1-2 menit.`);
-        await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, symbol, tf, null);
-      }
-      
       return new Response("OK");
     }
     return new Response("OK");
+  },
+
+  // --- INI FUNGSI CRON OTOMATIS DARI CLOUDFLARE ---
+  async scheduled(event, env, ctx) {
+    console.log("Cron job berjalan: Memicu Auto-Scan...");
+    await triggerGitHub(env.GITHUB_TOKEN, env.GITHUB_USER, env.GITHUB_REPO, null, null, "cron");
   }
 };
-
-// --- FUNGSI BANTUAN ---
 
 async function sendTelegram(token, chatId, text, replyMarkup = null) {
   const payload = { chat_id: chatId, text: text, parse_mode: "HTML" };
@@ -70,16 +58,10 @@ async function triggerGitHub(token, user, repo, symbol, tf, cmd = null) {
 
   return await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/agent.yml/dispatches`, {
     method: "POST",
-    headers: { 
-      "Authorization": `Bearer ${token}`, 
-      "Accept": "application/vnd.github+json", 
-      "User-Agent": "Cloudflare-Worker" 
-    },
+    headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "User-Agent": "Cloudflare-Worker" },
     body: JSON.stringify({ ref: "main", inputs: inputs })
   });
 }
-
-// --- FUNGSI KEYBOARD TELEGRAM ---
 
 function getMainMenu() {
   return { inline_keyboard: [
