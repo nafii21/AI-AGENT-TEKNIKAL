@@ -10,7 +10,7 @@ client = OpenAI(
 
 # Pakai DeepSeek (V4 Flash atau Chat). 
 # Catatan: Pastikan nama modelnya sesuai dengan yang ada di dashboard xKiro lo.
-MODEL = "deepseek/deepseek-chat" 
+MODEL = "deepseek/deepseek-v4-flash-0731" 
 
 SYSTEM_PROMPT = """
 Kamu adalah "Sniper Analyst" profesional kelas institusional.
