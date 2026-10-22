@@ -2,7 +2,7 @@ import os, argparse, httpx, json, pandas as pd
 from agent.data import fetch_data
 from agent.llm_layer import analyze
 from agent.charting import generate_chart
-from agent.journal import get_journals
+from agent.journal import get_journals, add_journal # Import fungsi add_journal
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -23,9 +23,16 @@ def main():
     parser.add_argument("--cmd")
     args = parser.parse_args()
 
+    # --- FITUR LIHAT JOURNAL ---
     if args.cmd == "journal":
         rows = get_journals()
-        send_tg("📖 Belum ada journal." if not rows else "📖 <b>Journal:</b> Fitur dalam pengembangan.")
+        if not rows:
+            send_tg("📖 Belum ada catatan journal.")
+        else:
+            txt = "📖 <b>5 Catatan Journal Terakhir:</b>\n"
+            for r in rows:
+                txt += f"\n📅 {r[0]}\n💱 {r[1]} | {r[2]}\n📍 Entry: {r[3]} | SL: {r[4]} | TP: {r[5]}\n🏆 Status: <b>{r[6]}</b>\n📝 {r[7]}\n"
+            send_tg(txt)
         return
 
     if not args.symbol or not args.tf:
@@ -45,18 +52,36 @@ def main():
         
         # 3. Format Pesan
         if action != "WAIT":
+            entry = decision.get('entry_price', 0)
+            sl = decision.get('sl', 0)
+            tp = decision.get('tp', 0)
+            reason = decision.get('reason', '-')
+            
+            # --- AUTO SAVE KE JOURNAL ---
+            add_journal(
+                symbol=args.symbol,
+                action=action,
+                entry=entry,
+                sl=sl,
+                tp=tp,
+                result="PENDING", # Status awal
+                notes=reason
+            )
+            # ----------------------------
+            
             text = (
                 f"⚡ <b>[HERMES UNIVERSAL SNIPER]</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
                 f"📊 Pair: <b>{args.symbol}</b> [{args.tf}]\n"
                 f"💰 Harga Saat Ini: <code>{current_price}</code>\n"
                 f"🎯 Action: <b>{emoji} {action}</b>\n"
-                f"📍 Entry: <code>{decision.get('entry_price', '-')}</code>\n"
-                f"🛑 SL: <code>{decision.get('sl', '-')}</code>\n"
-                f"💎 TP: <code>{decision.get('tp', '-')}</code>\n"
+                f"📍 Entry: <code>{entry}</code>\n"
+                f"🛑 SL: <code>{sl}</code>\n"
+                f"💎 TP: <code>{tp}</code>\n"
                 f"📊 RR: <b>{decision.get('rr', '-')}</b>\n"
                 f"━━━━━━━━━━━━━━━━━━\n"
-                f"💡 <b>Reason:</b>\n{decision.get('reason', '-')}\n"
+                f"💡 <b>Reason:</b>\n{reason}\n"
+                f"📝 <i>(Setup otomatis disimpan ke Journal)</i>"
             )
         else:
             text = (
