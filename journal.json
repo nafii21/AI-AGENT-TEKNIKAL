@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-22 14:57:12",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4064.0,
+    "sl": 4083.5,
+    "tp": 4025.0,
+    "result": "PENDING",
+    "notes": "Struktur pasar Bearish dominan dengan pembentukan Lower High (LH) di 4091.88 (Candle 12:00) dan Lower Low (LL) di 4046.78 (Candle 14:00). Harga sedang melakukan koreksi naik (Pullback) di Candle 14:00 yang menutup bullish di 4063.02. Entry Limit diletakkan di 4064.00 (Konfluensi: Level Fibonacci 61.8% / OTE dari leg turun 4091.88 -> 4046.78, serta resistance High Candle 14:00). Stop Loss diletakkan di 4083.50 (Di atas High Candle 14:00 @ 4063.22 + Buffer 20 poin untuk mengantisipasi noise/spread). Take Profit di 4025.00 menargetkan Ekstensi Fibonacci 1.618 dari leg koreksi serta area Likuiditas Buy Side (BSL) di bawah Low 4046. Risk:Reward terpenuhi minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-22 13:38:01",
     "symbol": "XAUUSD",
     "action": "SELL_LIMIT",
