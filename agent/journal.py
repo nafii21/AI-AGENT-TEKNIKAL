@@ -1,28 +1,35 @@
-import sqlite3
-DB_FILE = "journal.db"
+import json, os
+from datetime import datetime
 
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS journal
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                  symbol TEXT, action TEXT, entry REAL, sl REAL, tp REAL, result TEXT, notes TEXT)''')
-    conn.commit()
-    return conn
+# Ganti dari .db ke .json biar anti-gagal di GitHub Actions
+JOURNAL_FILE = "journal.json"
 
-# Fungsi untuk nyimpen setup baru
+def load_journal():
+    if not os.path.exists(JOURNAL_FILE): return []
+    try:
+        with open(JOURNAL_FILE, "r") as f:
+            return json.load(f)
+    except: return []
+
+def save_journal(data):
+    with open(JOURNAL_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
 def add_journal(symbol, action, entry, sl, tp, result, notes):
-    conn = init_db()
-    c = conn.cursor()
-    c.execute("INSERT INTO journal (symbol, action, entry, sl, tp, result, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-              (symbol, action, entry, sl, tp, result, notes))
-    conn.commit()
-    conn.close()
+    data = load_journal()
+    new_entry = {
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "symbol": symbol,
+        "action": action,
+        "entry": entry,
+        "sl": sl,
+        "tp": tp,
+        "result": result,
+        "notes": notes
+    }
+    data.insert(0, new_entry) # Masukin ke paling atas
+    save_journal(data)
 
 def get_journals(limit=5):
-    conn = init_db()
-    c = conn.cursor()
-    c.execute("SELECT timestamp, symbol, action, entry, sl, tp, result, notes FROM journal ORDER BY id DESC LIMIT ?", (limit,))
-    rows = c.fetchall()
-    conn.close()
-    return rows
+    data = load_journal()
+    return data[:limit] # Ambil 5 terakhir
