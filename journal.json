@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-22 13:38:01",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4084.5,
+    "sl": 4092.33,
+    "tp": 4057.0,
+    "result": "PENDING",
+    "notes": "Strategi: Trend Continuation Bearish / Sell Mitigation Block (Breaker Block). Struktur Mayor: Downtrend kuat terkonfirmasi BOS menembus Low 4106 & 4089, memperluas ke Low 4057 (11:00). Koreksi: Candle 12:00 (Bullish Reversal) naik 4058->4091 (BOS 1H). Penolakan: Candle 13:00 (Bearish) tolak di 4090 (Fib 0.79 & LH 08:00), Close 4073 (di bawah Equilibrium 12:00). Entry: Sell Limit di zona Mitigation Block (Open 13:00 4083.5 / Close 12:00 4086.1) sebagai Fair Value koreksi. SL: Di atas Swing High koreksi (High 13:00 4090.33) + Buffer 20 poin = 4092.33 (aman dari noise/spread). TP: Target Likuiditas Swing Low 4057. RR > 1:3.5 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-22 12:17:26",
     "symbol": "XAUUSD",
     "action": "BUY_LIMIT",
