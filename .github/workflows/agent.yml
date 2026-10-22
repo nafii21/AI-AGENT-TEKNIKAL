@@ -1,4 +1,4 @@
-name: Hermes OpenRouter Agent
+name: Hermes Universal Agent
 
 on:
   workflow_dispatch:
