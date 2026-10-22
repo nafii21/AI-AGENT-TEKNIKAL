@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "timestamp": "2026-10-22 17:44:00",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4092.0,
+    "sl": 4103.9,
+    "tp": 4068.0,
+    "result": "PENDING",
+    "notes": "Struktur pasar Bearish jelas. Harga koreksi ke Premium 61.8% Fibo & Bearish OB. SL di atas Swing High 4101.89 + Buffer 200 poin."
+  }
+]
