@@ -1,43 +1,51 @@
-import yfinance as yf
-import pandas as pd
+import os, httpx, pandas as pd
 
-SYMBOLS = {
-    "XAUUSD": "GC=F",
-    "NASDAQ": "NQ=F",
-    "GBPUSD": "GBPUSD=X",
-    "USDJPY": "JPY=X",
-    "BTCUSD": "BTC-USD"
+# PASTIKAN TWELVE_DATA_API_KEY UDAH MASUK DI GITHUB SECRETS
+TWELVE_KEY = os.getenv("TWELVE_DATA_API_KEY")
+
+# Mapping Timeframe ke Twelve Data
+TF_MAP_TWELVE = {
+    "M5": "5min", 
+    "M15": "15min", 
+    "H1": "1h", 
+    "H4": "4h", 
+    "D1": "1day"
 }
 
-TF_MAP = {
-    "M5": {"interval": "5m", "period": "5d"},
-    "M15": {"interval": "15m", "period": "1mo"},
-    "H1": {"interval": "1h", "period": "3mo"},
-    "H4": {"interval": "1h", "period": "6mo"}, # Ambil H1 dulu buat di-resample
-    "D1": {"interval": "1d", "period": "1y"}
+# Mapping Pair ke format Twelve Data
+TWELVE_SYMBOLS = {
+    "XAUUSD": "XAU/USD",
+    "GBPUSD": "GBP/USD",
+    "USDJPY": "USD/JPY",
+    "BTCUSD": "BTC/USD",
+    "NASDAQ": "QQQ" # QQQ aman di free tier, atau ganti ke NDX kalau punya paket bayar
 }
 
-def fetch_data(symbol: str, timeframe: str) -> pd.DataFrame:
-    ticker = SYMBOLS.get(symbol.upper(), symbol)
-    tf = TF_MAP.get(timeframe.upper(), TF_MAP["M15"])
+def fetch_data(symbol: str, timeframe: str, outputsize: int = 200) -> pd.DataFrame:
+    tw_symbol = TWELVE_SYMBOLS.get(symbol.upper(), symbol)
+    interval = TF_MAP_TWELVE.get(timeframe.upper(), "15min")
     
-    df = yf.download(ticker, period=tf["period"], interval=tf["interval"], progress=False)
-    if df.empty:
-        raise ValueError(f"Data kosong untuk {symbol}")
-        
-    if hasattr(df.columns, 'levels'):
-        df.columns = df.columns.get_level_values(0)
-        
-    df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close", "Volume": "volume"})
-    df = df.reset_index().rename(columns={"Datetime": "timestamps", "Date": "timestamps"})
+    url = f"https://api.twelvedata.com/time_series?symbol={tw_symbol}&interval={interval}&outputsize={outputsize}&timezone=UTC&apikey={TWELVE_KEY}"
+    resp = httpx.get(url, timeout=20).json()
     
-    # KHUSUS H4: Kita gabungin data H1 jadi H4
-    if timeframe.upper() == "H4":
-        df = df.set_index('timestamps')
-        df = df.resample('4h').agg({
-            'open': 'first', 'high': 'max', 'low': 'min', 
-            'close': 'last', 'volume': 'sum'
-        }).dropna().reset_index()
+    if "values" not in resp:
+        raise ValueError(f"TwelveData Error ({tw_symbol}): {resp.get('message', 'No data')}")
     
-    df['volume'] = df['volume'].fillna(1)
+    df = pd.DataFrame(resp["values"]).rename(columns={"datetime": "timestamps"})
+    
+    # Bersihin data harga
+    for col in ["open", "high", "low", "close"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    
+    # Antisipasi kalau volume kosong
+    if "volume" in df.columns:
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(1).replace(0, 1)
+    else:
+        df["volume"] = 1
+    
+    df["timestamps"] = pd.to_datetime(df["timestamps"])
+    df = df.sort_values("timestamps").reset_index(drop=True)
+    
     return df
