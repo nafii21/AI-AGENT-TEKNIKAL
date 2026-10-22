@@ -2,7 +2,7 @@ import os, argparse, httpx, json, pandas as pd
 from agent.data import fetch_data
 from agent.llm_layer import analyze
 from agent.charting import generate_chart
-from agent.journal import get_journals, add_journal # Import fungsi add_journal
+from agent.journal import get_journals, add_journal 
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -23,7 +23,7 @@ def main():
     parser.add_argument("--cmd")
     args = parser.parse_args()
 
-    # --- FITUR LIHAT JOURNAL ---
+    # --- FITUR LIHAT JOURNAL (FIXED UNTUK JSON) ---
     if args.cmd == "journal":
         rows = get_journals()
         if not rows:
@@ -31,7 +31,14 @@ def main():
         else:
             txt = "📖 <b>5 Catatan Journal Terakhir:</b>\n"
             for r in rows:
-                txt += f"\n📅 {r[0]}\n💱 {r[1]} | {r[2]}\n📍 Entry: {r[3]} | SL: {r[4]} | TP: {r[5]}\n🏆 Status: <b>{r[6]}</b>\n📝 {r[7]}\n"
+                # Kita ubah dari r[0] jadi r.get('timestamp') dll
+                txt += (
+                    f"\n📅 {r.get('timestamp', '-')}\n"
+                    f"💱 {r.get('symbol', '-')} | {r.get('action', '-')}\n"
+                    f"📍 Entry: {r.get('entry', '-')} | SL: {r.get('sl', '-')} | TP: {r.get('tp', '-')}\n"
+                    f"🏆 Status: <b>{r.get('result', '-')}</b>\n"
+                    f"📝 {r.get('notes', '-')}\n"
+                )
             send_tg(txt)
         return
 
@@ -57,17 +64,17 @@ def main():
             tp = decision.get('tp', 0)
             reason = decision.get('reason', '-')
             
-            # --- AUTO SAVE KE JOURNAL ---
+            # --- AUTO SAVE KE JOURNAL (JSON) ---
             add_journal(
                 symbol=args.symbol,
                 action=action,
                 entry=entry,
                 sl=sl,
                 tp=tp,
-                result="PENDING", # Status awal
+                result="PENDING",
                 notes=reason
             )
-            # ----------------------------
+            # -----------------------------------
             
             text = (
                 f"⚡ <b>[HERMES UNIVERSAL SNIPER]</b>\n"
