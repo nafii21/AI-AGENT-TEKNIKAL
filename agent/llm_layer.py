@@ -7,7 +7,8 @@ client = OpenAI(
     api_key=os.environ.get("OPENROUTER_API_KEY", "")
 )
 
-MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+# Menggunakan NVIDIA Nemotron 3 Ultra (Free Tier OpenRouter)
+MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 SYSTEM_PROMPT = """
 Kamu adalah "Sniper Analyst" profesional kelas institusional.
