@@ -1,11 +1,10 @@
-name: Hermes MSNR Sniper
+name: Hermes OpenRouter Agent
 
 on:
   workflow_dispatch:
     inputs:
       symbol: { description: 'Pair', required: false }
-      bias_tf: { description: 'Bias TF', required: false }
-      setup_tf: { description: 'Setup TF', required: false }
+      tf: { description: 'Timeframe', required: false }
       cmd: { description: 'Command', required: false }
 
 jobs:
@@ -29,17 +28,8 @@ jobs:
 
       - name: Run Agent
         env:
-          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python handler.py --symbol "${{ github.event.inputs.symbol }}" --bias_tf "${{ github.event.inputs.bias_tf }}" --setup_tf "${{ github.event.inputs.setup_tf }}" --cmd "${{ github.event.inputs.cmd }}"
-
-      - name: Commit Updates
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "GitHub Actions Bot"
-          git add active_setups.json journal.db || true
-          git commit -m "Update auto-journal [skip ci]" || echo "Tidak ada perubahan"
-          git push || true
+          python handler.py --symbol "${{ github.event.inputs.symbol }}" --tf "${{ github.event.inputs.tf }}" --cmd "${{ github.event.inputs.cmd }}"
