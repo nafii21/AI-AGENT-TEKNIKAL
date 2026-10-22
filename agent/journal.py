@@ -10,14 +10,6 @@ def init_db():
     conn.commit()
     return conn
 
-def add_journal(symbol, action, entry, sl, tp, result, notes):
-    conn = init_db()
-    c = conn.cursor()
-    c.execute("INSERT INTO journal (symbol, action, entry, sl, tp, result, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-              (symbol, action, entry, sl, tp, result, notes))
-    conn.commit()
-    conn.close()
-
 def get_journals(limit=5):
     conn = init_db()
     c = conn.cursor()
