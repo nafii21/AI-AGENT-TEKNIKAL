@@ -1,44 +1,81 @@
 import json, os
+import pandas as pd
 from openai import OpenAI
 
-client_groq = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.environ.get("GROQ_API_KEY", ""))
-GROQ_MODEL = "openai/gpt-oss-120b"
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.environ.get("OPENROUTER_API_KEY", "")
+)
+
+MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 
 SYSTEM_PROMPT = """
-Kamu adalah "Sniper MSNR Analyst".
-Tugasmu memberikan harga ENTRY LIMIT PRESISI (Sniper) di area Support/Resistance. Tanpa menunggu pola candle.
+Kamu adalah "Sniper Analyst" profesional kelas institusional.
+Tugasmu menganalisis market dengan strategi APAPUN (SMC, ICT, Wyckoff, Price Action, Elliott, Supply-Demand, Fibo, Order Block, FVG, dll) — pilihan strategi bebas, TAPI output wajib memenuhi standar eksekusi presisi.
 
-FRAMEWORK:
-1. Lihat "bias_trend". Jika BULLISH, cari BUY_LIMIT di area "nearest_support". Jika BEARISH, cari SELL_LIMIT di area "nearest_resistance".
-2. SNIPER ENTRY: Tentukan harga di ujung terluar S/R (Proximal) agar mendapat harga terbaik.
-3. SL: Letakkan sedikit di balik S/R tersebut (Distal).
-4. TP: Letakkan di S/R berikutnya atau hitung dengan RR minimal 1:2.
-5. RR WAJIB 1:2. Jika tidak memenuhi, action = "WAIT".
+ATURAN EKSEKUSI (SANGAT KETAT):
+1. ENTRY SNIPER: Berikan harga entry presisi (Limit Order). Jangan pernah menyarankan Market Order. Entry harus di level yang secara logika bisa memantulkan harga.
+2. SL (STOP LOSS): Wajib ada. Letakkan di balik struktur yang menginvalidasi setup.
+3. TP (TAKE PROFIT): Wajib ada. Targetkan level probabilitas tinggi berikutnya (liquidity, S/R, dll).
+4. RR (RISK:REWARD): WAJIB MINIMAL 1:2. Jika setup yang kamu temukan memiliki RR di bawah 1:2, kamu WAJIB mengembalikan action = "WAIT". Jangan memaksakan entry jika target terlalu dekat.
+5. REASON: Jelaskan secara logis dan singkat (Bahasa Indonesia) strategi apa yang kamu gunakan di data ini dan kenapa entry tersebut valid.
 
-OUTPUT HARUS JSON VALID:
+OUTPUT HARUS JSON VALID (tanpa markdown, tanpa teks tambahan):
 {
   "action": "BUY_LIMIT|SELL_LIMIT|WAIT",
   "entry_price": float,
   "sl": float,
-  "tp1": float,
-  "tp2": float,
+  "tp": float,
   "rr": float,
-  "confidence": float (0-10),
-  "reason": "Penjelasan singkat Bahasa Indonesia (sebutkan level S/R yang dipakai)"
+  "reason": "Alasan spesifik yang mencakup strategi, level S/R/SMC/PA, dan alasan sniper entry"
 }
 """
 
-def decide(symbol: str, bias_tf: str, setup_tf: str, pa_data: dict) -> dict:
+def analyze(df: pd.DataFrame) -> dict:
+    # Kirim 50 candle terakhir ke AI untuk dianalisa
+    data_json = df.tail(50).to_dict(orient="records")
+    
     try:
-        resp = client_groq.chat.completions.create(
-            model=GROQ_MODEL,
+        resp = client.chat.completions.create(
+            model=MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": json.dumps({"symbol": symbol, "data": pa_data}, ensure_ascii=False, default=str)},
+                {"role": "user", "content": json.dumps(data_json, ensure_ascii=False, default=str)},
             ],
-            temperature=0.1,
+            temperature=0.2,
             response_format={"type": "json_object"},
         )
-        return json.loads(resp.choices[0].message.content)
+        result = json.loads(resp.choices[0].message.content)
+        
+        # --- SATPAM MATEMATIKA (Anti-Halusinasi AI) ---
+        if result.get("action") not in ("BUY_LIMIT", "SELL_LIMIT", "WAIT"):
+            return {"action": "WAIT", "reason": "Sistem: Format action dari AI tidak valid."}
+
+        if result.get("action") in ("BUY_LIMIT", "SELL_LIMIT"):
+            entry = result.get("entry_price", 0)
+            sl = result.get("sl", 0)
+            tp = result.get("tp", 0)
+            
+            if entry and sl and tp:
+                risk = abs(entry - sl)
+                reward = abs(tp - entry)
+                
+                if risk == 0:
+                    return {"action": "WAIT", "reason": "Sistem: SL dan Entry tidak boleh sama."}
+                    
+                actual_rr = reward / risk
+                
+                # Kalau AI ngeyel ngasih RR di bawah 1.8, kita bantai jadi WAIT
+                if actual_rr < 1.8: 
+                    return {
+                        "action": "WAIT", 
+                        "reason": f"Sistem membatalkan setup karena RR aktual hanya 1:{actual_rr:.2f} (Minimal 1:2). AI terlalu memaksa entry."
+                    }
+                
+                result["rr"] = round(actual_rr, 2)
+            else:
+                return {"action": "WAIT", "reason": "Sistem: Data Entry, SL, atau TP tidak lengkap."}
+
+        return result
     except Exception as e:
-        return {"action": "WAIT", "reason": f"LLM Error: {str(e)}", "confidence": 0}
+        return {"action": "WAIT", "reason": f"LLM Error: {str(e)}"}
