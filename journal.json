@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-22 18:57:09",
+    "symbol": "BTCUSD",
+    "action": "SELL_LIMIT",
+    "entry": 81450.0,
+    "sl": 81478.0,
+    "tp": 81232.0,
+    "result": "PENDING",
+    "notes": "Harga bergerak naik korektif (Pullback) menuju area Resistance kunci 81430-81458 (Swing High 17:20 / Lower High HTF) yang berfungsi sebagai Bearish Order Block (OB) yang sudah termitigasi. Setup SELL LIMIT di 81450 memanfaatkan konsep 'Sell The Rally' di zona Premium/Discount Array. Target Take Profit di 81232 (Bullish OB 18:20-18:25 / Equilibrium Range) yang belum ter-test. Stop Loss diletakkan di 81478 (di atas Swing High 81458 + Buffer 20 poin) untuk mengantisipasi noise/stop hunt likuiditas di atas highs. Risk:Reward > 1:7 memenuhi standar institusional minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-22 14:57:12",
     "symbol": "XAUUSD",
     "action": "SELL_LIMIT",
