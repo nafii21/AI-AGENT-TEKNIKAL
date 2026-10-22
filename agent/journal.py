@@ -1,6 +1,7 @@
 import json, os
 from datetime import datetime
 from agent.data import fetch_data
+import pandas as pd
 
 JOURNAL_FILE = "journal.json"
 
@@ -33,46 +34,84 @@ def add_journal(symbol, action, entry, sl, tp, result, notes):
 def update_statuses():
     data = load_journal()
     updated = False
-    for entry in data:
+    
+    # Kelompokkan biar hemat API call
+    pending_entries = {}
+    for i, entry in enumerate(data):
         if entry.get('result') == 'PENDING':
-            symbol = entry.get('symbol')
-            try:
-                df = fetch_data(symbol, "M5")
-                current_price = float(df["close"].iloc[-1])
+            sym = entry.get('symbol')
+            if sym not in pending_entries:
+                pending_entries[sym] = []
+            pending_entries[sym].append((i, entry))
+            
+    for sym, entries in pending_entries.items():
+        try:
+            # Ambil data M5 yang lebih detail (200 candle = ~16 jam ke belakang)
+            df = fetch_data(sym, "M5") 
+            df['timestamps'] = pd.to_datetime(df['timestamps']).dt.tz_localize(None)
+            
+            for idx, entry in entries:
+                entry_time = pd.to_datetime(entry.get('timestamp'))
+                
+                # Ambil candle SETELAH setup dibuat
+                df_after = df[df['timestamps'] >= entry_time]
+                
+                if df_after.empty:
+                    continue 
                 
                 action = entry.get('action')
+                entry_price = float(entry.get('entry', 0))
                 tp = float(entry.get('tp', 0))
                 sl = float(entry.get('sl', 0))
                 
-                if action == "BUY_LIMIT":
-                    if current_price >= tp:
-                        entry['result'] = '✅ TP HIT'
-                        updated = True
-                    elif current_price <= sl:
-                        entry['result'] = '❌ SL HIT'
-                        updated = True
-                elif action == "SELL_LIMIT":
-                    if current_price <= tp:
-                        entry['result'] = '✅ TP HIT'
-                        updated = True
-                    elif current_price >= sl:
-                        entry['result'] = '❌ SL HIT'
-                        updated = True
-            except Exception:
-                pass 
+                hit_status = None
+                is_triggered = False # Flag: Apakah harga sudah nyentuh area Entry?
+                
+                # Ngecek candle satu per satu dari yang paling lama
+                for _, row in df_after.iterrows():
+                    high = float(row['high'])
+                    low = float(row['low'])
+                    
+                    # 1. CEK ENTRY DULU
+                    if not is_triggered:
+                        if action == "BUY_LIMIT" and low <= entry_price:
+                            is_triggered = True
+                        elif action == "SELL_LIMIT" and high >= entry_price:
+                            is_triggered = True
+                    
+                    # 2. KALAU ENTRY UDAH KENA, BARU CEK TP/SL
+                    if is_triggered:
+                        if action == "BUY_LIMIT":
+                            if high >= tp:
+                                hit_status = '✅ TP HIT'
+                                break
+                            elif low <= sl:
+                                hit_status = '❌ SL HIT'
+                                break
+                        elif action == "SELL_LIMIT":
+                            if low <= tp:
+                                hit_status = '✅ TP HIT'
+                                break
+                            elif high >= sl:
+                                hit_status = '❌ SL HIT'
+                                break
+                            
+                if hit_status:
+                    data[idx]['result'] = hit_status
+                    updated = True
+                    
+        except Exception as e:
+            print(f"Error update status {sym}: {e}")
                 
     if updated:
         save_journal(data)
 
 def get_monthly_stats():
-    """Fungsi buat ngitung TP, SL, dan Winrate bulan ini"""
     data = load_journal()
     now = datetime.utcnow()
-    current_month = now.strftime("%Y-%m") # Format: 2026-10
+    current_month = now.strftime("%Y-%m") 
     
-    tp_count = 0
-    sl_count = 0
-    total_closed = 0
+    tp_count, sl_count, total_closed = 0, 0, 0
     
     for entry in data:
         ts = entry.get("timestamp", "")
