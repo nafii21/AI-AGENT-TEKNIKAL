@@ -2,15 +2,14 @@ import json, os
 import pandas as pd
 from openai import OpenAI
 
-# --- PINDAH KE XKIRO ---
+# --- BALIK KE OPENROUTER ---
 client = OpenAI(
-    base_url="https://api.xkiro.com/v1", 
-    api_key=os.environ.get("XKIRO_API_KEY", "")
+    base_url="https://openrouter.ai/api/v1", 
+    api_key=os.environ.get("OPENROUTER_API_KEY", "")
 )
 
-# Pakai DeepSeek (V4 Flash atau Chat). 
-# Catatan: Pastikan nama modelnya sesuai dengan yang ada di dashboard xKiro lo.
-MODEL = "deepseek/deepseek-v4-flash-0731" 
+# Pakai Nemotron Ultra
+MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 SYSTEM_PROMPT = """
 Kamu adalah "Sniper Analyst" profesional kelas institusional.
@@ -54,7 +53,7 @@ def analyze(df: pd.DataFrame) -> dict:
         )
         result = json.loads(resp.choices[0].message.content)
         
-        # --- SATPAM MATEMATIKA ---
+        # --- SATPAM MATEMATIKA (Anti-Halusinasi AI) ---
         if result.get("action") not in ("BUY_LIMIT", "SELL_LIMIT", "WAIT"):
             return {"action": "WAIT", "reason": "Sistem: Format action dari AI tidak valid."}
 
@@ -67,7 +66,7 @@ def analyze(df: pd.DataFrame) -> dict:
                 risk = abs(entry - sl)
                 reward = abs(tp - entry)
                 
-                # Validasi jarak SL dinamis
+                # Validasi jarak SL dinamis (BTC min 50, Gold/Forex min 5)
                 min_risk = 50.0 if entry > 10000 else 5.0
                 
                 if risk < min_risk:
