@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-23 15:43:28",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4025.5,
+    "sl": 4044.0,
+    "tp": 3975.8,
+    "result": "PENDING",
+    "notes": "Struktur pasar Bearish kuat dengan pola Lower High (4034.67) dan Lower Low (3975.82). Harga sedang mengkoreksi naik (pullback) menuju area Premium: Bearish Order Block (candle jam 12:00, body 4024.27-4026.03) yang bertepatan dengan level Equilibrium (50% Fib) penurunan impulsif dari 4034.67 ke 3975.82. Entry Limit diletakkan di 4025.5 (tengah OB). Stop Loss dihitung berbasis struktur + buffer volatilitas: Swing High 4034.67 + buffer 9 poin (1.5x rata-rata body 10 candle terakhir ~6 poin) = 4044. Target Take Profit di likuiditas Swing Low 3975.82. Risk:Reward 1:2.69 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-22 20:03:41",
     "symbol": "XAUUSD",
     "action": "BUY_LIMIT",
