@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-24 13:41:16",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4032,
+    "sl": 4054,
+    "tp": 3975,
+    "result": "PENDING",
+    "notes": "Struktur pasar Bearish kuat dengan BOS (Break of Structure) pada 22 Okt (turun dari 4142 ke 3975). Harga saat ini mengkonsolidasi di area 3993 (kompresi volatilitas). Setup Short premium pada retest zona Supply/Order Block 4020-4034 (Flip Support jadi Resistance, konfluensi 50% Fib retracement impulsif 22-23 Okt & Open candle 22/23 Okt). Entry Limit 4032. SL diletakkan di 4054 (di atas Swing High lokal 23 Okt di 4034 + buffer volatilitas 20 poin). Buffer dihitung dari rata-rata body candle fase kompresi/normal (5-10 candle terakhir mengabaikan candle impulsif 22 Okt outlier 108 poin), rata-rata body ~12-14 poin, 1.5x = ~20 poin. TP di 3975 (Swing Low/Likuiditas Buy Side sebelumnya). RR 1:2.59 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-24 13:27:06",
     "symbol": "BTCUSD",
     "action": "BUY_LIMIT",
