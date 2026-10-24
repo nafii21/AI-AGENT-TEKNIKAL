@@ -26,7 +26,7 @@
     "entry": 80830.0,
     "sl": 80946.0,
     "tp": 80540.0,
-    "result": "PENDING",
+    "result": "\u26a0\ufe0f MISSED (TP Before Entry)",
     "notes": "Struktur pasar bearish jelas dengan Lower High (82060 -> 81097 -> 80846) dan Lower Low (80451). Harga melakukan pullback ke zona Supply/Order Block di rentang 80820-80846 (puncak candle 12:00 & 13:00). Candle 13:00 membentuk Inside Bar/Doji di puncak menandakan penolakan (rejection) dan kelemahan pembeli. Entry Sell Limit ditempatkan di 80830 (tengah zona penolakan). Stop Loss diletakkan di 80946, yaitu di atas struktur Swing High signifikan 80846 ditambah buffer volatilitas 1.5x rata-rata ukuran body 10 candle terakhir (~100 poin) untuk menghindari noise. Take Profit menargetkan likuiditas Swing Low sebelumnya di 80540. Risk:Reward tercapai 1:2.5 memenuhi kriteria minimal 1:2."
   },
   {
