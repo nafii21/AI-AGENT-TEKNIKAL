@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-24 15:38:11",
+    "symbol": "BTCUSD",
+    "action": "SELL_LIMIT",
+    "entry": 79575.0,
+    "sl": 79774.0,
+    "tp": 79150.0,
+    "result": "PENDING",
+    "notes": "Struktur Downtrend kuat (Lower Low 79220, Lower High 79763). Pullback koreksi naik terbentuk di candle 15:30 (High 79534) mendekati zona resistensi 15:00 Low (79557). Entry Limit di 79575 (konfluen resistensi pullback). SL 79774 diletakkan di atas High koreksi 79534 ditambah buffer volatilitas 240 poin (1.5x rata-rata body 10 candle terakhir ~160 poin), mengamankan struktur Lower High intraday. TP 79150 menarget likuiditas di bawah Swing Low 79220. RR 2.13 memenuhi minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-24 13:41:16",
     "symbol": "XAUUSD",
     "action": "SELL_LIMIT",
