@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-24 11:06:38",
+    "symbol": "BTCUSD",
+    "action": "SELL_LIMIT",
+    "entry": 80730.0,
+    "sl": 80823.0,
+    "tp": 80451.0,
+    "result": "PENDING",
+    "notes": "Struktur Bearish terkonfirmasi dengan Lower High (80925 -> 80828 -> 80738) dan Lower Low (80451). Harga saat ini (80682) berada di dalam area FVG Bearish (Imbalance) yang terbentuk antara Low 08:30 (80642) dan High 08:45 (80733). Setup Sniper: Limit Sell di atas FVG/High 08:45 (80730) untuk memanfaatkan mitigasi FVG dan resistensi Swing High 80738. SL diletakkan di atas Swing High terbaru (80738) ditambah Buffer Volatilitas 1.5x rata-rata body 10 candle terakhir (Avg Body ~56.8, Buffer ~85 poin) = 80823, memastikan SL di luar noise struktur. TP mengarah ke Swing Low/Likuiditas di 80451. RR 1:3.0 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-24 06:19:15",
     "symbol": "BTCUSD",
     "action": "SELL_LIMIT",
