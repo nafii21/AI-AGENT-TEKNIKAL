@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-24 06:19:15",
+    "symbol": "BTCUSD",
+    "action": "SELL_LIMIT",
+    "entry": 80900.0,
+    "sl": 80995.0,
+    "tp": 80700.0,
+    "result": "PENDING",
+    "notes": "Struktur pasar 15m menunjukkan pola Lower Highs (81094 -> 80977 -> 80919 -> 80816) mengindikasikan dominasi seller. Harga saat ini mengonsolidasikan dalam Range terbatas (80700 - 80950). Setup Mean Reversion: Sell Limit di Supply Zone/Range High 80900. SL diletakkan di 80995 (di atas Swing High konsolidasi 80950 + buffer volatilitas 1.5x rata-rata body 10 candle terakhir ~45 poin + penyesuaian volatilitas BTC). TP di 80700 (Range Low/Demand Zone 80696-80722). RR 1:2.1 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-23 15:43:28",
     "symbol": "XAUUSD",
     "action": "SELL_LIMIT",
