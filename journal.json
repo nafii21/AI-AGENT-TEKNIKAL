@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-24 13:27:06",
+    "symbol": "BTCUSD",
+    "action": "BUY_LIMIT",
+    "entry": 80350.0,
+    "sl": 78650.0,
+    "tp": 84500.0,
+    "result": "PENDING",
+    "notes": "Struktur pasar menunjukkan Higher Low mayor di 79.800 (15 Okt) yang diuji kembali di area 80.400-80.500 (23-24 Okt), membentuk Demand Zone kuat (konfluensi Swing Low, 0.786 Fib retracement naik 15-21 Okt, dan psychological 80k). Entry Limit di 80.350 (tengah zona value). SL diletakkan di 78.650: di bawah struktur Swing Low 79.800 ditambah buffer volatilitas 1.5x rata-rata body 10 candle terakhir (~1.140 poin) untuk mengakomodasi noise BTC dan menghindari stop hunt. Target TP 84.500 menuju likuiditas Buy-side / Resistance area 84k-85k (Swing High 21 Okt). RR tercapai 2.44 > 2.0 minimum."
+  },
+  {
     "timestamp": "2026-10-24 13:18:10",
     "symbol": "BTCUSD",
     "action": "SELL_LIMIT",
