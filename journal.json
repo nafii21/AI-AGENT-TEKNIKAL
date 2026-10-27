@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-27 08:51:57",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4016.0,
+    "sl": 4033.0,
+    "tp": 3977.0,
+    "result": "PENDING",
+    "notes": "Struktur pasar Bearish jelas (Lower Highs/Lower Lows). Harga menolak Swing High 4030 (Premium) dan membentuk Bearish Order Block (OB) valid pada candle 2026-10-27 00:00 (Open 4005.89 - Close 4016.63) diikuti displacement kuat ke bawah. Entry Limit diletakkan di 4016 (Top OB / 50% mitigation) menunggu retest. SL 4033 dihitung dari OB High (4021.31) + Buffer Volatilitas 1.5x Avg Body (rata-rata body 10 candle terakhir ~7.8 poin, buffer ~12 poin), memastikan SL di atas Swing High 4030 sebagai invalidasi struktur. TP 3977 menargetkan Sell-Side Liquidity (Swing Low 2026-10-26). RR 1:2.3 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-27 08:40:09",
     "symbol": "XAUUSD",
     "action": "BUY_LIMIT",
