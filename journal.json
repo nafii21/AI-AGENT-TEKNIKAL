@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-27 08:40:09",
+    "symbol": "XAUUSD",
+    "action": "BUY_LIMIT",
+    "entry": 3989.0,
+    "sl": 3982.34,
+    "tp": 4007.5,
+    "result": "PENDING",
+    "notes": "Struktur H1 Bearish (Lower Highs/Lower Lows) mendorong harga ke Zona Demand Mayor (Macro) 3988-3990 (Low 26 Oct 13:00 & 01:00, asal ledakan naik 26 Oct 14:00). Setup Counter-Trend Reversal presisi di value area. Entry Limit 3989.00 (konfluensi zona & psikologis). SL 3982.34 diletakkan di bawah struktur Swing Low absolut (3988.67) ditambah Buffer Volatilitas 1.5x rata-rata body 9 candle terakhir (~5.66 poin) untuk menghindari stop hunt/wick palsu. TP 4007.50 menarget Swing High terdekat (LH 27 Oct 07:00) & area Imbalance. RR 1:2.76 memenuhi minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-24 15:38:11",
     "symbol": "BTCUSD",
     "action": "SELL_LIMIT",
