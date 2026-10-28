@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-28 13:18:18",
+    "symbol": "NASDAQ",
+    "action": "SELL_LIMIT",
+    "entry": 726.5,
+    "sl": 737.46,
+    "tp": 702.0,
+    "result": "PENDING",
+    "notes": "Trend utama Bearish terkonfirmasi dengan struktur Lower High (727.95 -> 722.87) dan Lower Low (707.23 -> 701.90). Harga saat ini melakukan koreksi naik (pullback) menuju Bearish Order Block (OB) yang terbentuk pada candle 21 Okt (High 727.95, Low 719.71) yang bertindak sebagai zona Supply/Premium. Entry diset di 726.50 (dekat 50% OB & slightly di bawah Swing High 727.95) untuk memaksimalkan RR. SL diletakkan di 737.46 dihitung dari struktur Swing High 727.95 ditambah buffer volatilitas 1.5x rata-rata body 10 candle terakhir (avg body ~6.34, buffer ~9.51) untuk menghindari stop hunt. Target TP di 702.00 mengacu pada Sell-Side Liquidity (SSL) di Swing Low 22 Okt (701.90). RR tercapai 1:2.23 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-27 08:51:57",
     "symbol": "XAUUSD",
     "action": "SELL_LIMIT",
