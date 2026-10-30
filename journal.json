@@ -1,5 +1,15 @@
 [
   {
+    "timestamp": "2026-10-30 16:18:58",
+    "symbol": "XAUUSD",
+    "action": "SELL_LIMIT",
+    "entry": 4066.4,
+    "sl": 4138.3,
+    "tp": 3800.0,
+    "result": "PENDING",
+    "notes": "Struktur pasar Downtrend kuat dengan Lower High (4081) dan Lower Low (3893). Setup Sell Limit di Bearish Order Block (OB) tanggal 28 Okt (Range 4061-4071) sebagai area Premium untuk melanjutkan tren turun. Stop Loss diletakkan di atas High OB (4071) ditambah buffer volatilitas 1.5x rata-rata body candle 5-10 hari terakhir (~67 poin) ke level 4138 untuk menghindari stop hunt. Target Take Profit di level likuiditas/psikologis 3800 (proyeksi ekstensi). Risk:Reward ~ 1:3.7 memenuhi kriteria minimal 1:2."
+  },
+  {
     "timestamp": "2026-10-28 13:18:18",
     "symbol": "NASDAQ",
     "action": "SELL_LIMIT",
