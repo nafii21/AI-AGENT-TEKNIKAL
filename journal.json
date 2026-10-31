@@ -16,7 +16,7 @@
     "entry": 726.5,
     "sl": 737.46,
     "tp": 702.0,
-    "result": "PENDING",
+    "result": "\u26a0\ufe0f MISSED (TP Before Entry)",
     "notes": "Trend utama Bearish terkonfirmasi dengan struktur Lower High (727.95 -> 722.87) dan Lower Low (707.23 -> 701.90). Harga saat ini melakukan koreksi naik (pullback) menuju Bearish Order Block (OB) yang terbentuk pada candle 21 Okt (High 727.95, Low 719.71) yang bertindak sebagai zona Supply/Premium. Entry diset di 726.50 (dekat 50% OB & slightly di bawah Swing High 727.95) untuk memaksimalkan RR. SL diletakkan di 737.46 dihitung dari struktur Swing High 727.95 ditambah buffer volatilitas 1.5x rata-rata body 10 candle terakhir (avg body ~6.34, buffer ~9.51) untuk menghindari stop hunt. Target TP di 702.00 mengacu pada Sell-Side Liquidity (SSL) di Swing Low 22 Okt (701.90). RR tercapai 1:2.23 memenuhi kriteria minimal 1:2."
   },
   {
@@ -26,7 +26,7 @@
     "entry": 4016.0,
     "sl": 4033.0,
     "tp": 3977.0,
-    "result": "PENDING",
+    "result": "\u26a0\ufe0f MISSED (TP Before Entry)",
     "notes": "Struktur pasar Bearish jelas (Lower Highs/Lower Lows). Harga menolak Swing High 4030 (Premium) dan membentuk Bearish Order Block (OB) valid pada candle 2026-10-27 00:00 (Open 4005.89 - Close 4016.63) diikuti displacement kuat ke bawah. Entry Limit diletakkan di 4016 (Top OB / 50% mitigation) menunggu retest. SL 4033 dihitung dari OB High (4021.31) + Buffer Volatilitas 1.5x Avg Body (rata-rata body 10 candle terakhir ~7.8 poin, buffer ~12 poin), memastikan SL di atas Swing High 4030 sebagai invalidasi struktur. TP 3977 menargetkan Sell-Side Liquidity (Swing Low 2026-10-26). RR 1:2.3 memenuhi kriteria minimal 1:2."
   },
   {
@@ -36,7 +36,7 @@
     "entry": 3989.0,
     "sl": 3982.34,
     "tp": 4007.5,
-    "result": "PENDING",
+    "result": "\u274c SL HIT",
     "notes": "Struktur H1 Bearish (Lower Highs/Lower Lows) mendorong harga ke Zona Demand Mayor (Macro) 3988-3990 (Low 26 Oct 13:00 & 01:00, asal ledakan naik 26 Oct 14:00). Setup Counter-Trend Reversal presisi di value area. Entry Limit 3989.00 (konfluensi zona & psikologis). SL 3982.34 diletakkan di bawah struktur Swing Low absolut (3988.67) ditambah Buffer Volatilitas 1.5x rata-rata body 9 candle terakhir (~5.66 poin) untuk menghindari stop hunt/wick palsu. TP 4007.50 menarget Swing High terdekat (LH 27 Oct 07:00) & area Imbalance. RR 1:2.76 memenuhi minimal 1:2."
   },
   {
@@ -46,7 +46,7 @@
     "entry": 79575.0,
     "sl": 79774.0,
     "tp": 79150.0,
-    "result": "PENDING",
+    "result": "\u26a0\ufe0f MISSED (TP Before Entry)",
     "notes": "Struktur Downtrend kuat (Lower Low 79220, Lower High 79763). Pullback koreksi naik terbentuk di candle 15:30 (High 79534) mendekati zona resistensi 15:00 Low (79557). Entry Limit di 79575 (konfluen resistensi pullback). SL 79774 diletakkan di atas High koreksi 79534 ditambah buffer volatilitas 240 poin (1.5x rata-rata body 10 candle terakhir ~160 poin), mengamankan struktur Lower High intraday. TP 79150 menarget likuiditas di bawah Swing Low 79220. RR 2.13 memenuhi minimal 1:2."
   },
   {
@@ -56,7 +56,7 @@
     "entry": 4032,
     "sl": 4054,
     "tp": 3975,
-    "result": "PENDING",
+    "result": "\u26a0\ufe0f MISSED (TP Before Entry)",
     "notes": "Struktur pasar Bearish kuat dengan BOS (Break of Structure) pada 22 Okt (turun dari 4142 ke 3975). Harga saat ini mengkonsolidasi di area 3993 (kompresi volatilitas). Setup Short premium pada retest zona Supply/Order Block 4020-4034 (Flip Support jadi Resistance, konfluensi 50% Fib retracement impulsif 22-23 Okt & Open candle 22/23 Okt). Entry Limit 4032. SL diletakkan di 4054 (di atas Swing High lokal 23 Okt di 4034 + buffer volatilitas 20 poin). Buffer dihitung dari rata-rata body candle fase kompresi/normal (5-10 candle terakhir mengabaikan candle impulsif 22 Okt outlier 108 poin), rata-rata body ~12-14 poin, 1.5x = ~20 poin. TP di 3975 (Swing Low/Likuiditas Buy Side sebelumnya). RR 1:2.59 memenuhi kriteria minimal 1:2."
   },
   {
@@ -66,7 +66,7 @@
     "entry": 80350.0,
     "sl": 78650.0,
     "tp": 84500.0,
-    "result": "PENDING",
+    "result": "\u274c SL HIT",
     "notes": "Struktur pasar menunjukkan Higher Low mayor di 79.800 (15 Okt) yang diuji kembali di area 80.400-80.500 (23-24 Okt), membentuk Demand Zone kuat (konfluensi Swing Low, 0.786 Fib retracement naik 15-21 Okt, dan psychological 80k). Entry Limit di 80.350 (tengah zona value). SL diletakkan di 78.650: di bawah struktur Swing Low 79.800 ditambah buffer volatilitas 1.5x rata-rata body 10 candle terakhir (~1.140 poin) untuk mengakomodasi noise BTC dan menghindari stop hunt. Target TP 84.500 menuju likuiditas Buy-side / Resistance area 84k-85k (Swing High 21 Okt). RR tercapai 2.44 > 2.0 minimum."
   },
   {
@@ -106,7 +106,7 @@
     "entry": 4025.5,
     "sl": 4044.0,
     "tp": 3975.8,
-    "result": "PENDING",
+    "result": "\u26a0\ufe0f MISSED (TP Before Entry)",
     "notes": "Struktur pasar Bearish kuat dengan pola Lower High (4034.67) dan Lower Low (3975.82). Harga sedang mengkoreksi naik (pullback) menuju area Premium: Bearish Order Block (candle jam 12:00, body 4024.27-4026.03) yang bertepatan dengan level Equilibrium (50% Fib) penurunan impulsif dari 4034.67 ke 3975.82. Entry Limit diletakkan di 4025.5 (tengah OB). Stop Loss dihitung berbasis struktur + buffer volatilitas: Swing High 4034.67 + buffer 9 poin (1.5x rata-rata body 10 candle terakhir ~6 poin) = 4044. Target Take Profit di likuiditas Swing Low 3975.82. Risk:Reward 1:2.69 memenuhi kriteria minimal 1:2."
   },
   {
